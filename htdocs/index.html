@@ -623,63 +623,6 @@ function user_settings_page(func)
 }
 
 
-function user_general_settings()
-{
-	let x="<table align=center border=0>";
-	x += settings_header("Change User Details",true);
-	x += "<form name=editUserDetails method=post action=# onSubmit='postUserDetails(); return false;'>";
-	x += "<table id=editUserDetails width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
-	x += form_prompt("Your Domain")+`<input style="width: 300px;" id='user_domain' value='${ctx.user.email}'></td></tr>`;
-	x += form_prompt("Recovery E-Mail")+`<input style="width: 300px;" id='user_email' value='${ctx.user.name}'></td></tr>`;
-    x += form_prompt("Default Auto Renew")+`<select id='default_auto_renew'>`;
-
-    let yes_chk="",no_chk="";
-    if (ctx.user.default_auto_renew) yes_chk="selected"; else no_chk="selected";
-    x += `<option ${yes_chk} value=1>Yes<option ${no_chk} value=0>No</select></td></tr>`;
-	x += "<tr><td colspan=2></td><td align=right><input style='width: 135px;' type=submit class=myBtn value='Change'></td></tr>";
-	x += "</table></form></td></tr>";
-
-
-	x += settings_header("Control Two-Factor Authentication");
-	x += "<table width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
-	if (("two_fa" in ctx.user) && (ctx.user.two_fa != null) && (ctx.user.two_fa != "")) {
-		x += "<tr><td colspan=2>Disable Google Authenticator two-factor authentication</td></tr>";
-		x += "<tr><td colspan=2></td><td id=2fa_section align=right>"+btn("disable_two_fa()","Disable 2FA","Disable Google Authenticator two-factor authentication",100)+"</td></tr>";
-		}
-	else {
-		x += "<tr><td colspan=2>Enable Google Authenticator two-factor authentication</td></tr>";
-		x += "<tr><td colspan=2></td><td id=2fa_section align=right>"+btn("enable_two_fa()","Enable 2FA","Enable Google Authenticator two-factor authentication",100)+"</td></tr>";
-		}
-	x += "</table></form></td></tr>";
-
-
-	x += settings_header("Change Your Password");
-	x += "<form name=editUserPassword method=post action=# onSubmit='postUserPassword(); return false;'>";
-	x += "<table id=editUserPassword width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
-	x += form_prompt("Current Password");
-	x += `<input style="width: 300px;" autocomplete="current-password" placeholder="Current password" type=password id='password'></td></tr>`;
-	x += form_prompt("<b>New</b> Password");
-	x += `<input style="width: 300px;" autocomplete="new-password" placeholder="New password" type=password id='new_password'></td></tr>`;
-	x += form_prompt("Confirm <b>New</b> Password");
-	x += `<input style="width: 300px;" autocomplete="new-password" placeholder="Confirm New Password" type=password id='confirm_password'></td></tr>`;
-	x += "<tr><td colspan=2></td><td align=right><input style='width: 135px;' type=submit class=myBtn value='Change'></td></tr>";
-	x += "</table></form></td></tr>";
-
-
-	x += settings_header("Close This Account");
-	x += "<form name=editCloseAccount method=post action=# onSubmit='postCloseAccount(); return false;'>";
-	x += "<table id=editCloseAccount width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
-	x += "<tr><td colspan=2>To close your account, please enter your current password</td></tr>";
-	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
-	x += form_prompt("Current Password");
-	x += `<input style="width: 300px;" autocomplete="current-password" placeholder="Your current password" type=password id='close_password'></td></tr>`;
-	x += "<tr><td colspan=2></td><td align=right><input style='width: 135px;' type=submit class=myBtn value='Close Account'></td></tr>";
-	x += "</table></form></td></tr>";
-
-	return x+"</table>";
-}
-
-
 
 function event_details()
 {
@@ -722,8 +665,10 @@ function userDetails()
 		[ "amended_dt", "Last Updated" ],
 		];
 
-	let x = "<table align=center width=75%>"
+	let x = "<table border=0 align=center width=75%>"
+    x += settings_header("Account Details");
 
+	x += "<tr><td><table width=100%>";
 	for(let i of acct_desc) if (i[0] in ctx.user) {
 		let val = ctx.user[i[0]];
 		if (i[0]=="mx") {
@@ -736,6 +681,30 @@ function userDetails()
 		if (i[0]=="user") val = toUnicode(val);
 		x += `<tr><td align=right>${i[1]}&nbsp;:&nbsp;</td><td>${val}</td></tr>`;
 		}
+	x += "</td></tr></table>"
+
+    x += settings_header("Change Your Password");
+    x += "<form name=editUserPassword method=post action=# onSubmit='postUserPassword(); return false;'>";
+    x += "<table id=editUserPassword width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
+    x += form_prompt("Current Password");
+    x += `<input style="width: 300px;" autocomplete="current-password" placeholder="Current password" type=password id='password'></td></tr>`;
+    x += form_prompt("<b>New</b> Password");
+    x += `<input style="width: 300px;" autocomplete="new-password" placeholder="New password" type=password id='new_password'></td></tr>`;
+    x += form_prompt("Confirm <b>New</b> Password");
+    x += `<input style="width: 300px;" autocomplete="new-password" placeholder="Confirm New Password" type=password id='confirm_password'></td></tr>`;
+    x += "<tr><td colspan=2></td><td align=right><input style='width: 135px;' type=submit class=myBtn value='Change'></td></tr>";
+    x += "</table></form></td></tr>";
+
+	x += settings_header("Close This Account");
+	x += "<form name=editCloseAccount method=post action=# onSubmit='postCloseAccount(); return false;'>";
+	x += "<table id=editCloseAccount width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
+	x += "<tr><td colspan=2>To close your account, please enter your current password</td></tr>";
+	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
+	x += form_prompt("Current Password");
+	x += `<input style="width: 300px;" autocomplete="current-password" placeholder="Your current password" type=password id='close_password'></td></tr>`;
+	x += "<tr><td colspan=2></td><td align=right><input style='width: 135px;' type=submit class=myBtn value='Close Account'></td></tr>";
+	x += "</table></form></td></tr>";
+
 	return x+"</table>";
 }
 
