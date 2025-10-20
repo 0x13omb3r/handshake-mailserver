@@ -202,8 +202,18 @@ function loggedIn()
 {
 	let e = document.getElementById("noLoginBtns");
 	e.style.display = "none";
-	e = document.getElementById("isLoggedIn");
-	e.style.display = "block";
+
+	e1 = document.getElementById("managerLoggedIn");
+	e2 = document.getElementById("isLoggedIn");
+	if ((ctx.user)&&(ctx.user.user=="_manager")) {
+		e1.style.display = "block";
+		e2.style.display = "none";
+		}
+	else {
+		e1.style.display = "none";
+		e2.style.display = "block";
+		}
+
 	if (elm.userSpace.style.display == "block") go_welcome_page(true);
 	user_info();
 	show_one_space("userSpace");
@@ -297,7 +307,7 @@ function doLogin()
 
 	let f = document.formLogin;
 	let fqdn = toASCII(f.user.value)
-	if (!fqdnCheck.test(fqdn)) return regErr("Invalid login name",f.user);
+	if ((!fqdnCheck.test(fqdn))&&(fqdn!="_manager")) return regErr("Invalid login name",f.user);
 
 	let data = { "user":fqdn, "password":f.password.value };
 
@@ -335,8 +345,8 @@ function loggedOut()
 {
 	let e = document.getElementById("noLoginBtns");
 	e.style.display = "block";
-	e = document.getElementById("isLoggedIn");
-	e.style.display = "none";
+	e = document.getElementById("managerLoggedIn"); e.style.display = "none";
+	e = document.getElementById("isLoggedIn"); e.style.display = "none";
 	elm.userInfo.innerHTML = "";
 
 	elm.emailIcon.style.display="none";
@@ -673,9 +683,11 @@ function user_general_settings()
 
 function event_details()
 {
+	if (!ctx.user.events) return "";
+
 	let x = "<table align=center width=75%>"
 	for(let i of ctx.user.events) 
-		x += `<tr><td align=right>${i.when_dt}&nbsp;:&nbsp;</td><td>${i.desc}</td></tr>`;
+		x += `<tr><td align=right>${local_dt(i.when_dt)}&nbsp;:&nbsp;</td><td>${i.desc}</td></tr>`;
 	return x+"</table>";
 }
 
@@ -818,7 +830,8 @@ function myStuff(with_push, value_to_show)
 		ctx.last_user_val = value_fn();
 		elm.userSpace.innerHTML = ctx.last_user_val;
 		ctx.user_space_fn = value_fn;
-		ctx.user_time = setTimeout(refresh_user_space,gbl.user_refresh);
+		if (value_to_show != "myAccount")
+			ctx.user_time = setTimeout(refresh_user_space,gbl.user_refresh);
 		size_one_space();
 		});
 }
@@ -967,6 +980,14 @@ function make_theme_popup()
 	<span style='width: 75px;' tabindex=0 title="My account details" id="myAccountBtn" class=myBtn onClick="myStuff(true,'myAccount'); return false;">Account</span>
 	<span style='width: 75px;' tabindex=0 title="Log me out" class=myBtn onClick="doLogOut(); return false;">Logout</span>
 </span>
+
+<span style="display:none;" id="managerLoggedIn">
+	<span style='width: 85px; display: none' id=webmailButton tabindex=0 title="Open webmail interface" class=myBtn onClick="openWebMail();">WebMail</span>
+	<span style='width: 75px;' tabindex=0 title="List account events" id="myEventsBtn" class=myBtn onClick="myStuff(true,'myEvents'); return false;">Event Log</span>
+	<span style='width: 75px;' tabindex=0 title="My account details" id="myAccountBtn" class=myBtn onClick="myStuff(true,'myAccount'); return false;">Account</span>
+	<span style='width: 75px;' tabindex=0 title="Log me out" class=myBtn onClick="doLogOut(); return false;">Logout</span>
+</span>
+
 </td></tr>
 </td>
 

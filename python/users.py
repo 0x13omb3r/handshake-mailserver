@@ -19,8 +19,7 @@ import usercfg
 import misc
 # from log import this_log as log
 
-USER_FILE = policy.BASE + "/service/users.json"
-SESSIONS_DIR = "/run/sessions"
+SESSIONS_DIR = os.path.join(policy.BASE, "service", "sessions")
 
 SESSION_EXPIRE_TIME = policy.get("session_expiry")
 
@@ -70,12 +69,12 @@ def login(sent_data, user_agent):
     if not compare_passwords(sent_data["password"], user_data["password"]):
         return False, "Password does no match"
 
-    usercfg.user_info_update(sent_data["user"], {"last_login_dt": misc.now()})
+    usercfg.user_info_update(sent_data["user"], {"sent_warning": False, "last_login_dt": misc.now()})
     return create_session_file(sent_data["user"], user_data, user_agent)
 
 
 def check_session(session_code, user_agent):
-    file = SESSIONS_DIR + "/" + session_code
+    file = os.path.join(SESSIONS_DIR, session_code)
     now = time.time()
 
     if not os.path.isfile(file):
@@ -112,7 +111,7 @@ def logout(session_code, user, user_agent):
     if not ok or user_data is None:
         return False, "Session code failed to checkout"
 
-    os.remove(SESSIONS_DIR + "/" + session_code)
+    os.remove(os.path.join(SESSIONS_DIR, session_code))
     return True, None
 
 
@@ -140,6 +139,7 @@ def register(sent_data, user_agent):
         "created_dt": now,
         "amended_dt": now,
         "last_login_dt": now,
+        "sent_warning": False,
         "email": sent_data["email"],
         "events": [{
             "when_dt": now,
@@ -177,7 +177,6 @@ def debug_stuff():
             "password": "yes",
             "confirm": "yes"
         }, "my-agent"))
-    print("--->>>", USER_FILE)
     # print(usercfg.user_info_load("james"))
     # print(usercfg.user_info_update("james", {"user": "james", "password": "fred"}))
     # print(usercfg.user_info_load("james"))

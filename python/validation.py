@@ -20,6 +20,8 @@ IS_FQDN = r'^([a-z0-9]([-a-z-0-9]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9]([-a-z0-9]{0,61
 IS_EMAIL = r'^[A-Za-z0-9\_\-\.]+$'
 IS_TLD = r'^[a-z0-9]([-a-z-0-9]{0,61}[a-z0-9]){0,1}[.]?$'
 
+RESERVED_ACCOUNT_NAMES = {"root": True, "poatmaster": True, "rainloop": True, "service": True}
+
 used_domains = fileloader.FileLoader(policy.DOMAINS_FILE)
 
 
@@ -147,6 +149,9 @@ def web_validate(sent_data, rules):
 def pre_check_user(user, is_new):
     if not is_valid_handshake(user):
         return False, "Invalid account name"
+
+    if user in RESERVED_ACCOUNT_NAMES:
+        return False, "Reserved account name"
 
     tld = user.split(".")[-1]
     if tld in icann_tlds.ICANN_TLDS and not policy.get("allow_icann_domains"):

@@ -23,7 +23,8 @@ DEFAULT_POLICY_VALUES = {
     "strict_referrer": True,
     "allow_icann_domains": False,
     "allowable_referrer": None,
-    "session_expiry": 60 * 60 * 2
+    "session_expiry": 60 * 60 * 2,
+    "inactive_account_expire": 7
 }
 
 BASE = os.environ.get("BASE", "/opt/data")

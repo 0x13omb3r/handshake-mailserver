@@ -35,7 +35,7 @@ PASSWD_FILE_PERMS = {
 def make_home_dir(data):
     if "user" not in data or "uid" not in data:
         return False
-    path = os.path.join(policy.BASE, "homedirs", data["user"])
+    path = os.path.join(policy.BASE, "service", "homedirs", data["user"])
     if not os.path.isdir(path):
         os.mkdir(path)
     os.chown(path, data["uid"], get_gid("users"))

@@ -41,10 +41,9 @@ class UserData:
     def __init__(self):
         self.users_to_welcome = []
         self.need_remake_mail_files = False
-        self.need_remake_system_files = False
+        self.need_remake_unix_files = False
         self.resolver = None
         self.active_users = None
-        self.taken_uids = None
         self.active_users = None
 
     def startup(self):
@@ -54,10 +53,6 @@ class UserData:
     def load_user_details(self):
         self.load_users()
         self.active_users = [user for user in self.all_users if validation.is_user_active(self.all_users[user])]
-        self.taken_uids = {
-            self.all_users[user]["uid"]: True
-            for user in self.active_users if self.all_users[user].get("uid", 0) > 100
-        }
 
         for user in self.active_users:
             this_user = self.all_users[user]
@@ -85,20 +80,21 @@ class UserData:
             }
         })
         self.users_to_welcome.append(user)
-        self.need_remake_system_files = True
+        self.need_remake_unix_files = True
 
     def load_users(self):
-        get_user_files = subprocess.run(
+        all_user_files = subprocess.run(
             ["/bin/busybox", "find",
              os.path.join(policy.BASE, "service", "users"), "-type", "f", "-name", "*.json"],
             capture_output=True)
         self.all_users = {}
-        for file in get_user_files.stdout.decode('utf-8').strip().split():
+        for file in all_user_files.stdout.decode('utf-8').strip().split():
             lock = os.path.join(os.path.dirname(file), ".lock")
             user = file.split("/")[-1][:-5]
-            with filelock.FileLock(lock), open(file, "r") as fd:
-                self.all_users[user] = json.load(fd)
-            self.all_users[user]["user"] = user
+            if user != "_manager":
+                with filelock.FileLock(lock), open(file, "r") as fd:
+                    self.all_users[user] = json.load(fd)
+                self.all_users[user]["user"] = user
 
     def remake_unix_files(self, data):
         base_data = {}
@@ -110,7 +106,7 @@ class UserData:
             lines = base_data["passwd"]
             for user in self.active_users:
                 this_user = self.all_users[user]
-                lines.append(f"{user}:x:{this_user['uid']}:100::/opt/data/homedirs/{user}:/sbin/nologin")
+                lines.append(f"{user}:x:{this_user['uid']}:100::/opt/data/service/homedirs/{user}:/sbin/nologin")
             fd.write("\n".join(lines) + "\n")
 
         with open("/run/shadow.tmp", "w+") as fd:
@@ -131,15 +127,36 @@ class UserData:
         return True
 
     def find_free_uid(self):
+        taken_uids = {
+            self.all_users[user]["uid"]: True
+            for user in self.active_users if self.all_users[user].get("uid", 0) > 100
+        }
         for x in range(1000, 30000):
-            if x not in self.taken_uids:
+            if x not in taken_uids:
                 return x
         return None
 
     def user_age_check(self, data):
         log.debug("User age check")
-        # CODE - flush away users that didn't activate
-        pass
+
+        for user in self.all_users:
+            self.check_one_user(self.all_users[user], check_all_domains=True)
+
+        warning_age = misc.now(86400 * (policy.get("inactive_account_expire", 7) / 2))
+        for user in [u for u in self.all_users if u not in self.active_users]:
+            if self.all_users[user]["last_login_dt"] < warning_age and not self.all_users[user].get(
+                    "sent_warning", False):
+                usercfg.user_info_update(user, {"sent_warning": True})
+                # CODE - email warning, but only once !
+
+        too_old = misc.now(86400 * policy.get("inactive_account_expire", 7))
+        for user in [u for u in self.all_users if u not in self.active_users]:
+            if self.all_users[user]["last_login_dt"] < too_old:
+                os.remove(usercfg.user_file_name(user))
+                del self.all_users[user]
+                # CODE - root remove homedir
+
+        return True
 
     def run_mx_check(self, data=None):
         if data is not None:
@@ -168,7 +185,9 @@ class UserData:
             fd.write(f"postfix@{default_mail_domain} manager\n")
             for user in self.active_users:
                 user_data = self.all_users[user]
-                fd.write(f"{user}@{default_mail_domain} {user}\n")
+                doms = user_data["domains"]
+                for dom in [d for d in doms if doms[d]]:
+                    fd.write(f"{dom}@{default_mail_domain} {user}\n")
                 for email in [e for e in user_data["identities"] if validation.is_email_active(user_data, e)]:
                     fd.write(f"{email} {user}\n")
 
@@ -189,30 +208,45 @@ class UserData:
 
     def check_remake_files(self):
         log.debug(
-            f"need_remake_mail_files: {self.need_remake_mail_files}, need_remake_system_files: {self.need_remake_system_files}"
+            f"need_remake_mail_files: {self.need_remake_mail_files}, need_remake_unix_files: {self.need_remake_unix_files}"
         )
         if self.need_remake_mail_files:
             self.remake_mail_files(None)
             executor.create_command("doms_runner_user_update", "root", {"verb": "install_mail_files"})
 
-        if self.need_remake_system_files:
+        if self.need_remake_unix_files:
             self.remake_unix_files(None)
             executor.create_command("doms_runner_user_update", "root", {"verb": "install_passwd_files"})
 
-        self.need_remake_system_files = self.need_remake_mail_files = False
+        self.need_remake_unix_files = self.need_remake_mail_files = False
 
-    def check_one_user(self, this_user):
+    def check_one_user(self, this_user, check_all_domains=False):
+        user = this_user["user"]
         save_this_user = False
-        doms = this_user.get("domains", None)
-        if doms is not None:
-            for dom in [d for d in doms if not doms[d]]:
-                if self.check_one_domain(this_user, dom):
+        if (doms := this_user.get("domains", None)) is None:
+            return
+
+        for dom in [d for d in doms if not doms[d] or check_all_domains]:
+            if self.check_one_domain(this_user, dom):
+                save_this_user = True
+                self.need_remake_mail_files = True
+                if dom != user:
+                    # CODE - email user a new domain is now active, if secondary domain!
+                    pass
+            else:
+                if check_all_domains and doms[doms]:
+                    doms[dom] = False
                     save_this_user = True
                     self.need_remake_mail_files = True
+                    if dom == user:
+                        del this_user["uid"]
+                        del self.active_users[user]
+                        self.need_remake_unix_files = True
 
         if save_this_user:
-            log.debug(f"saving user '{this_user['user']}'")
-            usercfg.user_info_update(this_user["user"], {
+            log.debug(f"saving user '{user}'")
+            usercfg.user_info_update(user, {
+                "last_login_dt": misc.now(),
                 "domains": this_user["domains"],
                 "events": this_user["events"]
             })
@@ -229,7 +263,6 @@ class UserData:
         this_user["events"].append({"when_dt": misc.now(), "desc": f"Domain '{domain}' is now active"})
 
         log.debug(f"check_one_domain PASS: {this_user['user']}, {domain}")
-        # CODE - email user a new domain is now active, if secondary domain!
         return True
 
     def email_users_welcome(self, data):
@@ -270,7 +303,7 @@ class UserData:
 
         for dom in email_doms:
             if dom not in this_user["domains"]:
-                # CODE - email users to say we saw their new domain
+                # CODE - Should we email users to say we just saw their new domain ?
                 this_user["domains"][dom] = False
 
         this_user["identities"].sort()
@@ -304,7 +337,7 @@ class UserData:
         return True
 
     def dispatch_job(self, verb, data):
-        self.need_remake_mail_files = self.need_remake_system_files = False
+        self.need_remake_mail_files = self.need_remake_unix_files = False
         if DOMS_CMDS[verb](data):
             self.check_remake_files()
             return True
@@ -333,8 +366,8 @@ DOMS_CMDS = {
 }
 
 
-def runner(to_syslog):
-    log.init("DOMS backend", with_debug=misc.debug_mode(), to_syslog=to_syslog)
+def runner(with_debug, to_syslog):
+    log.init("DOMS backend", with_debug=(with_debug or misc.debug_mode()), to_syslog=to_syslog)
 
     Users.finish_start_uo()
     log.log("DOMS backend running")
@@ -371,6 +404,7 @@ def run_tests():
 
 def main():
     parser = argparse.ArgumentParser(description='DOMS Jobs Runner')
+    parser.add_argument("-D", "--debug", default=False, help="With debug messages", action="store_true")
     parser.add_argument("-S", "--syslog", default=False, help="With syslog", action="store_true")
     parser.add_argument("-T", "--test", default=False, help="Run tests", action="store_true")
     parser.add_argument("-O", "--one", help="Run one module")
@@ -386,11 +420,11 @@ def main():
         Users.dispatch_job(args.one, json.loads(args.data) if args.data else None)
 
     elif args.test:
-        log.init("DOMS run test", with_debug=True, to_syslog=args.syslog)
+        log.init("DOMS run test", with_debug=args.debug, to_syslog=args.syslog)
         run_tests()
 
     else:
-        runner(args.syslog)
+        runner(args.debug, args.syslog)
 
 
 if __name__ == "__main__":
