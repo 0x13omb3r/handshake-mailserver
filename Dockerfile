@@ -44,7 +44,7 @@ RUN chmod 700 /usr/local/etc/data
 RUN ln -fns /run/passwd /etc/passwd
 RUN ln -fns /run/shadow /etc/shadow
 RUN ln -fns /run/group /etc/group
-RUN ln -s /opt/data/service/sasl2 /etc/sasl2
+RUN ln -s /opt/data/data/service/sasl2 /etc/sasl2
 
 RUN rm -f /var/cache/apk/*
 

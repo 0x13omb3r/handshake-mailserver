@@ -17,9 +17,9 @@ import executor
 import validation
 import usercfg
 import misc
-# from log import this_log as log
+from log import this_log as log
 
-SESSIONS_DIR = os.path.join(policy.BASE, "service", "sessions")
+SESSIONS_DIR = os.path.join(policy.BASE, "data", "service", "sessions")
 
 SESSION_EXPIRE_TIME = policy.get("session_expiry")
 
@@ -155,13 +155,25 @@ def register(sent_data, user_agent):
     with open(file, "w+") as fd:
         json.dump(user_data, fd, indent=2)
 
-    executor.create_command("new_user_added", "doms", {"verb": "new_user_added"})
+    executor.create_command("new_user_added", "doms", {"verb": "new_user_added", "data": {"user": user}})
     return create_session_file(user, user_data, user_agent)
 
 
-def password_new(password):
-    # CODE - change password
-    pass
+def close_account(user):
+    file, __ = usercfg.user_file_name(user)
+    log.debug(f"close_account: {user} - {file}")
+    if not os.path.isfile(file):
+        return False, "User not found"
+
+    os.remove(file)
+    executor.create_command("webui_account_closed", "doms", {"verb": "account_closed"})
+    return True, None
+
+
+def password_new(user, password):
+    usercfg.user_info_update(user, {"password": encrypt(password)})
+    executor.create_command("webui_password_changed", "doms", {"verb": "password_changed"})
+    return True
 
 
 if __name__ == "__main__":

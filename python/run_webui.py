@@ -163,7 +163,7 @@ def users_password():
     if not users.check_password(req.user, req.post_js):
         return req.abort("Password match failed")
 
-    users.password_new(req.post_js["new_password"])
+    users.password_new(req.user, req.post_js["new_password"])
 
     return req.response("OK")
 
@@ -196,10 +196,23 @@ def users_logout():
     return req.response("logged-out")
 
 
-@application.route('/wmapi/users/close', methods=['GET'])
+@application.route('/wmapi/users/close', methods=['POST'])
 def users_close():
-    # CODE - close account
-    pass
+    req = WebuiReq()
+    if not req.is_logged_in:
+        return req.abort(NOT_LOGGED_IN)
+
+    if not users.check_password(req.user, req.post_js):
+        return req.abort("Password match failed")
+
+    ok, reply = users.close_account(req.user)
+    if not ok:
+        return req.abort(reply)
+
+    req.user_id = None
+    req.sess_code = None
+
+    return req.response("OK")
 
 
 @application.route('/wmapi/password/reset', methods=['GET'])

@@ -24,12 +24,13 @@ DEFAULT_POLICY_VALUES = {
     "allow_icann_domains": False,
     "allowable_referrer": None,
     "session_expiry": 60 * 60 * 2,
-    "inactive_account_expire": 7
+    "inactive_account_expire": 7,
+    "manager_account": "manager"
 }
 
 BASE = os.environ.get("BASE", "/opt/data")
-POLICY_FILE = os.path.join(BASE, "service", "policy.json")
-DOMAINS_FILE = os.path.join(BASE, "service", "used_domains.json")
+POLICY_FILE = os.path.join(BASE, "data", "service", "policy.json")
+DOMAINS_FILE = os.path.join(BASE, "data", "service", "used_domains.json")
 
 
 class Policy:
@@ -38,6 +39,9 @@ class Policy:
         self.BASE = BASE
         self.POLICY_FILE = POLICY_FILE
         self.DOMAINS_FILE = DOMAINS_FILE
+        self.USER_DIR = os.path.join(BASE, "data", "service", "users")
+        self.HOME_DIR = os.path.join(BASE, "data", "service", "homedirs")
+
         if not os.path.isfile(POLICY_FILE):
             with open(POLICY_FILE, "w+") as fd:
                 json.dump(DEFAULT_POLICY_VALUES, fd, indent=2)

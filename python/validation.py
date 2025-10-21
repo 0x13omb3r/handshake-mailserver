@@ -20,7 +20,13 @@ IS_FQDN = r'^([a-z0-9]([-a-z-0-9]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9]([-a-z0-9]{0,61
 IS_EMAIL = r'^[A-Za-z0-9\_\-\.]+$'
 IS_TLD = r'^[a-z0-9]([-a-z-0-9]{0,61}[a-z0-9]){0,1}[.]?$'
 
-RESERVED_ACCOUNT_NAMES = {"root": True, "poatmaster": True, "rainloop": True, "service": True}
+RESERVED_ACCOUNT_NAMES = {
+    "root": True,
+    "poatmaster": True,
+    "rainloop": True,
+    "service": True,
+    policy.get("manager_account"): True
+}
 
 used_domains = fileloader.FileLoader(policy.DOMAINS_FILE)
 
@@ -166,7 +172,7 @@ def pre_check_user(user, is_new):
     if (not is_new) and (not already_in_use):
         return False, "Invalid login"
 
-    return True, None
+    return True, tld
 
 
 def web_valid_reg_account(user):
@@ -198,7 +204,7 @@ def web_valid_new_account(user):
 
 # for testing
 if __name__ == "__main__":
-    print("he")
+    print(web_valid_new_account("lord.webmail"))
     #print(email_active(sys.argv[1],dict.fromkeys(sys.argv[2].split(","),True)))
 
 

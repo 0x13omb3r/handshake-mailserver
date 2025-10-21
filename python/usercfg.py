@@ -9,11 +9,14 @@ import json
 import misc
 from policy import this_policy as policy
 
-CFG_DIR = os.path.join(policy.BASE, "/service/")
+CFG_DIR = os.path.join(policy.BASE, "data", "service")
 LCK_DIR = "/run/"
 
 
 def calc_hash(user):
+    if user == policy.get("manager_account"):
+        return ["00", "00"]
+
     hashval = 2166136261
     for ch in user:
         hashval = hashval * 16777619
@@ -25,12 +28,12 @@ def calc_hash(user):
 def user_file_name(user, with_make_dir=False):
     this_hash = calc_hash(user)
     if with_make_dir:
-        d = policy.BASE
-        for dir in ["service", "users", this_hash[0], this_hash[1]]:
+        d = CFG_DIR
+        for dir in ["users", this_hash[0], this_hash[1]]:
             d = os.path.join(d, dir)
             if not os.path.isdir(d):
                 os.mkdir(d, mode=0o755)
-    path = os.path.join(policy.BASE, "service", "users", this_hash[0], this_hash[1])
+    path = os.path.join(CFG_DIR, "users", this_hash[0], this_hash[1])
     return os.path.join(path, user + ".json"), os.path.join(path, ".lock")
 
 

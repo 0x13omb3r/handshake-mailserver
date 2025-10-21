@@ -35,7 +35,7 @@ PASSWD_FILE_PERMS = {
 def make_home_dir(data):
     if "user" not in data or "uid" not in data:
         return False
-    path = os.path.join(policy.BASE, "service", "homedirs", data["user"])
+    path = os.path.join(policy.HOME_DIR, data["user"])
     if not os.path.isdir(path):
         os.mkdir(path)
     os.chown(path, data["uid"], get_gid("users"))
@@ -63,7 +63,8 @@ def install_unix_files(data):
             os.chmod(src, perm)
             os.chown(src, uid, gid)
             os.replace(src, f"/run/{file}")
-    executor.create_command("install_unix_files", "doms", {"verb": "email_users_welcome"})
+    if data is not None and isinstance(data, dict) and (callback := data.get("with_doms_callback", None)) is not None:
+        executor.create_command("install_unix_files", "doms", {"verb": callback})
     return True
 
 

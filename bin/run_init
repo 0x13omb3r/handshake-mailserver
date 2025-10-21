@@ -4,38 +4,44 @@ echo "=================== [$(date)] INITALIZING ==================="
 
 . /usr/local/bin/inc
 
-mkdir -p ${BASE}/pems ${BASE}/rainloop \
-	${BASE}/service/sasl2 ${BASE}/service/homedirs ${BASE}/service/mailboxes \
+mkdir -p ${BASE}/pems \
+	${BASE}/data/service/sasl2 ${BASE}/data/service/homedirs ${BASE}/data/service/mailboxes \
 	${BASE}/postfix/data/ ${BASE}/postfix/spool/
-chmod 755 ${BASE}/service/homedirs ${BASE}/service/mailboxes ${BASE}/rainloop
+chmod 755 ${BASE}/data/service/homedirs ${BASE}/data/service/mailboxes
 
 for file in group passwd shadow
 do
 	cp -a ${SRC}/uid/${file} /run/${file}
 done
 
-if ! test -d ${BASE}/service
+if ! test -d ${BASE}/data/service
 	then
-		cp -a /usr/local/etc/service ${BASE}/service
+		cp -a /usr/local/etc/service ${BASE}/data/
 	fi
-if ! test -f ${BASE}/service/used_domains.json
+if ! test -f ${BASE}/data/service/used_domains.json
 	then
-		echo "{}" > ${BASE}/service/used_domains.json
+		echo "{}" > ${BASE}/data/service/used_domains.json
 	fi
-chown -R 850: ${BASE}/service/users ${BASE}/service/sessions ${BASE}/service/*.json ${BASE}/service/*.eml
+chown -R 850: ${BASE}/data/service/users ${BASE}/data/service/sessions ${BASE}/data/service/*.json ${BASE}/data/service/*.eml
 
 /usr/local/python/doms_runner.py -O remake_unix_files
 /usr/local/python/root_runner.py -O install_unix_files
 
-mkdir -p /run/exec/root /run/exec/doms ${BASE}/service/sessions
-chmod 777 /run/exec/root /run/exec/doms ${BASE}/service/sessions
-chown service: /run/exec/doms ${BASE}/service/sessions
+mkdir -p /run/exec/root /run/exec/doms ${BASE}/data/service/sessions
+chmod 777 /run/exec/root /run/exec/doms ${BASE}/data/service/sessions
+chown service: /run/exec/doms ${BASE}/data/service/sessions
 
 
 ${PYBASE}/merge_templates.py
 . /run/templates/__include__
 /usr/local/python/doms_runner.py -O remake_mail_files
 /usr/local/python/root_runner.py -O install_mail_files
+
+if ! test -d ${BASE}/data/service/homedirs/${POLICY_MANAGER_ACCOUNT}
+	then
+		mkdir -p ${BASE}/data/service/homedirs/${POLICY_MANAGER_ACCOUNT}
+		chown 900: ${BASE}/data/service/homedirs/${POLICY_MANAGER_ACCOUNT}
+	fi
 
 if ! grep -q '^manager:' /etc/passwd
 	then
@@ -83,12 +89,13 @@ done
 
 mkdir /run/nginx; chown nginx: /run/nginx
 
-if ! test -f ${BASE}/rainloop/EMPTY
+mkdir -p ${BASE}/data/rainloop
+if ! test -f ${BASE}/data/rainloop/EMPTY
 	then
-		cp -a ${SRC}/data/. ${BASE}/rainloop/
+		cp -a ${SRC}/data/. ${BASE}/data/rainloop/
 	fi
 
-RAINLOOP="${BASE}/rainloop/_data_/_default_"
+RAINLOOP="${BASE}/data/rainloop/_data_/_default_"
 dst="${RAINLOOP}/configs/application.ini"
 src="/run/templates/application.ini"
 tag="${RAINLOOP}/configs/.made_by_auto"
@@ -102,8 +109,8 @@ dst="${RAINLOOP}/domains/${POLICY_DEFAULT_MAIL_DOMAIN}.ini"
 src="/run/templates/webmail.localhost.ini"
 if ! test -f ${dst}; then rm -f ${RAINLOOP}/domains/*; cp -a ${src} ${dst}; fi
 
-chmod 700 ${BASE}/rainloop
-chown -R rainloop: ${BASE}/rainloop
+chmod 700 ${BASE}/data/rainloop
+chown -R rainloop: ${BASE}/data/rainloop
 
 echo "=================== [$(date)] STARTING ==================="
 exec /sbin/init

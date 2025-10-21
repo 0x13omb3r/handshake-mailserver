@@ -3,6 +3,7 @@
 # Alternative license arrangements possible, contact me for more information
 """ functions for sys-logging """
 
+import os
 import sys
 import syslog
 import inspect
@@ -105,6 +106,8 @@ class Log:
         syslog.openlog(logoption=syslog.LOG_PID, facility=this_facility)
         self.to_syslog = to_syslog
         self.with_debug = with_debug
+        if os.environ.get("DEBUG_MODE", "N") == "Y":
+            self.with_debug = True
         self.done_init = True
 
 

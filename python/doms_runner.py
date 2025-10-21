@@ -3,7 +3,6 @@
 import os
 import json
 import time
-import filelock
 import subprocess
 import argparse
 import base64
@@ -83,34 +82,43 @@ class UserData:
         self.need_remake_unix_files = True
 
     def load_users(self):
-        all_user_files = subprocess.run(
-            ["/bin/busybox", "find",
-             os.path.join(policy.BASE, "service", "users"), "-type", "f", "-name", "*.json"],
-            capture_output=True)
+        all_user_files = subprocess.run([
+            "/bin/busybox", "find",
+            os.path.join(policy.BASE, "data", "service", "users"), "-type", "f", "-name", "*.json"
+        ],
+                                        capture_output=True)
         self.all_users = {}
+        manager_account = policy.get("manager_account")
         for file in all_user_files.stdout.decode('utf-8').strip().split():
-            lock = os.path.join(os.path.dirname(file), ".lock")
             user = file.split("/")[-1][:-5]
-            if user != "_manager":
-                with filelock.FileLock(lock), open(file, "r") as fd:
-                    self.all_users[user] = json.load(fd)
-                self.all_users[user]["user"] = user
+            if user != manager_account:
+                ok, reply = usercfg.user_info_load(user)
+                if ok:
+                    self.all_users[user] = reply
 
     def remake_unix_files(self, data):
         base_data = {}
+        manager_account = policy.get("manager_account")
+        ok, manager_info = usercfg.user_info_load(manager_account)
+
         for file in ["passwd", "shadow", "group"]:
             with open(os.path.join(BASE_UX_DIR, file), "r") as fd:
                 base_data[file] = [line.strip() for line in fd.readlines()]
 
         with open("/run/passwd.tmp", "w+") as fd:
             lines = base_data["passwd"]
+            if ok:
+                lines.append(
+                    f"{manager_account}:x:900:900::{os.path.join(policy.HOME_DIR, manager_account)}:/sbin/nologin")
             for user in self.active_users:
                 this_user = self.all_users[user]
-                lines.append(f"{user}:x:{this_user['uid']}:100::/opt/data/service/homedirs/{user}:/sbin/nologin")
+                lines.append(f"{user}:x:{this_user['uid']}:100::{os.path.join(policy.HOME_DIR, user)}:/sbin/nologin")
             fd.write("\n".join(lines) + "\n")
 
         with open("/run/shadow.tmp", "w+") as fd:
             lines = base_data["shadow"]
+            if ok:
+                lines.append(f"{manager_account}:{manager_info['password']}:20367:0:99999:7:::")
             for user in self.active_users:
                 this_user = self.all_users[user]
                 lines.append(f"{user}:{this_user['password']}:20367:0:99999:7:::")
@@ -118,6 +126,8 @@ class UserData:
 
         with open("/run/group.tmp", "w+") as fd:
             lines = [line for line in base_data["group"] if line[:6] != "users:"]
+            if ok:
+                lines.append(f"{manager_account}:x:900:{manager_account}")
             lines.append("users:x:100:" + ",".join(self.active_users))
             fd.write("\n".join(lines) + "\n")
 
@@ -216,7 +226,10 @@ class UserData:
 
         if self.need_remake_unix_files:
             self.remake_unix_files(None)
-            executor.create_command("doms_runner_user_update", "root", {"verb": "install_passwd_files"})
+            data = {"verb": "install_unix_files"}
+            if len(self.users_to_welcome) > 0:
+                data["data"] = {"with_doms_callback": "email_users_welcome"}
+            executor.create_command("doms_runner_user_update", "root", data)
 
         self.need_remake_unix_files = self.need_remake_mail_files = False
 
@@ -325,7 +338,8 @@ class UserData:
     def new_user_added(self, data):
         if (user := data.get("user", None)) is None:
             return False
-        if (this_user := usercfg.user_info_load(user)) is None:
+        ok, this_user = usercfg.user_info_load(user)
+        if not ok or this_user is None:
             return False
         this_user["user"] = user
         self.all_users[user] = this_user
@@ -345,6 +359,14 @@ class UserData:
             log.log(f"ERROR: cmd '{verb}' failed")
             return False
 
+    def password_changed(self, data):
+        self.need_remake_unix_files = True
+        return True
+
+    def account_closed(self, data):
+        self.need_remake_mail_files = self.need_remake_unix_files = True
+        return True
+
 
 def test_test(data):
     log.log(f"TEST DOMS: {data}, Users: {len(Users.all_users)}, Active: {len(Users.active_users)}")
@@ -362,6 +384,8 @@ DOMS_CMDS = {
     "remake_unix_files": Users.remake_unix_files,
     "remake_mail_files": Users.remake_mail_files,
     "start_up_new_files": Users.start_up_new_files,
+    "password_changed": Users.password_changed,
+    "account_closed": Users.account_closed,
     "test": test_test
 }
 
@@ -384,6 +408,7 @@ def runner(with_debug, to_syslog):
             elif cmd_data["verb"] not in DOMS_CMDS:
                 log.log(f"ERROR: Verb '{cmd_data['verb']}' is not supported")
             else:
+                log.debug(f"Running cmd: '{cmd_data['verb']}'")
                 if not Users.dispatch_job(cmd_data["verb"], cmd_data.get("data", None)):
                     time.sleep(5)
 
