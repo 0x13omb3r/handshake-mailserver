@@ -43,7 +43,6 @@ class UserData:
         self.need_remake_unix_files = False
         self.resolver = None
         self.active_users = None
-        self.active_users = None
 
     def startup(self):
         self.resolver = resolv.Resolver()
@@ -68,7 +67,6 @@ class UserData:
         user = this_user["user"]
         this_uid = self.find_free_uid()
         this_user["uid"] = this_uid
-        self.taken_uids[this_uid] = True
         self.active_users.append(user)
         usercfg.user_info_update(user, {"uid": this_uid})
         executor.create_command("doms_runner_user_add", "root", {
@@ -156,7 +154,7 @@ class UserData:
         file, __ = usercfg.user_file_name(user)
         if os.path.isfile(file):
             os.remove(file)
-        del self.active_users[user]
+        self.active_users.remove(user)
         self.need_remake_mail_files = self.need_remake_unix_files = True
 
         executor.create_command("doms_delete_user", "root", {
