@@ -5,9 +5,9 @@ echo "=================== [$(date)] INITALIZING ==================="
 . /usr/local/bin/inc
 
 mkdir -p ${BASE}/pems \
-	${BASE}/data/service/sasl2 ${BASE}/data/service/homedirs ${BASE}/data/service/mailboxes \
+	${BASE}/data/service/sasl2 ${BASE}/data/homedirs ${BASE}/data/mailboxes \
 	${BASE}/postfix/data/ ${BASE}/postfix/spool/
-chmod 755 ${BASE}/data/service/homedirs ${BASE}/data/service/mailboxes
+chmod 755 ${BASE}/data/homedirs ${BASE}/data/mailboxes
 
 for file in group passwd shadow
 do
@@ -37,10 +37,10 @@ ${PYBASE}/merge_templates.py
 /usr/local/python/doms_runner.py -O remake_mail_files
 /usr/local/python/root_runner.py -O install_mail_files
 
-if ! test -d ${BASE}/data/service/homedirs/${POLICY_MANAGER_ACCOUNT}
+if ! test -d ${BASE}/data/homedirs/${POLICY_MANAGER_ACCOUNT}
 	then
-		mkdir -p ${BASE}/data/service/homedirs/${POLICY_MANAGER_ACCOUNT}
-		chown 900: ${BASE}/data/service/homedirs/${POLICY_MANAGER_ACCOUNT}
+		mkdir -p ${BASE}/data/homedirs/${POLICY_MANAGER_ACCOUNT}
+		chown 900: ${BASE}/data/homedirs/${POLICY_MANAGER_ACCOUNT}
 	fi
 
 if ! grep -q '^manager:' /etc/passwd

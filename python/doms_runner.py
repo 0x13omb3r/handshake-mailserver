@@ -146,6 +146,26 @@ class UserData:
                 return x
         return None
 
+    def delete_user(self,user):
+        if user in self.all_users:
+            del self.all_users[user]
+
+        if user not in self.active_users:
+            return
+
+        file, __ = usercfg.user_file_name(user)
+        if os.path.isfile(file):
+            os.remove(file)
+        del self.active_users[user]
+        self.need_remake_mail_files = self.need_remake_unix_files = True
+
+        executor.create_command("doms_delete_user", "root", {
+            "verb": "remove_homedir",
+            "data": {
+                "user": user
+            }
+        })
+
     def user_age_check(self, data):
         log.debug("User age check")
 
@@ -162,9 +182,7 @@ class UserData:
         too_old = misc.now(86400 * policy.get("inactive_account_expire", 7))
         for user in [u for u in self.all_users if u not in self.active_users]:
             if self.all_users[user]["last_login_dt"] < too_old:
-                os.remove(usercfg.user_file_name(user))
-                del self.all_users[user]
-                # CODE - root remove homedir
+                self.delete_user(user)
 
         return True
 
@@ -364,8 +382,10 @@ class UserData:
         return True
 
     def account_closed(self, data):
-        self.need_remake_mail_files = self.need_remake_unix_files = True
-        return True
+        if data is not None and isinstance(data, dict) and (user := data.get("user", None)) is not None:
+            self.delete_user(user)
+            return True
+        return False
 
 
 def test_test(data):

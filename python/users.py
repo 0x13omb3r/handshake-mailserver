@@ -166,7 +166,7 @@ def close_account(user):
         return False, "User not found"
 
     os.remove(file)
-    executor.create_command("webui_account_closed", "doms", {"verb": "account_closed"})
+    executor.create_command("webui_account_closed", "doms", {"verb": "account_closed", "data": { "user": user } })
     return True, None
 
 

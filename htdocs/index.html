@@ -366,20 +366,9 @@ function history_back(event)
 
 	let router = {
 		"resend_password": resend_password,
-		"basketCheckout": basketCheckout,
-		"payment_methods": payment_methods,
-		"domain_dns": go_domain_dns,
-		"domain_transfer_options": go_domain_transfer_options,
-		"domain_settings": go_domain_settings,
-		"show_one_domain": go_show_one_domain,
-		"user_statement": go_user_statement,
-		"user_settings": user_settings,
 		"myAccount": myAccount,
 		"myDomains": myDomains,
-		"myAboutMe": select_about_me,
-		"request_transfer": request_transfer,
-		"go_welcome_page": go_welcome_page,
-		"viewMessages": viewMessages,
+		"myEvents": myEvents,
 		"welcome": go_welcome
 		};
 
@@ -597,32 +586,6 @@ function postCloseAccount()
 		}, { json: { "password": f.close_password.value }});
 
 	return false;
-}
-
-function enable_two_fa() { errMsg(gbl.thumb+"&nbsp;Coming Soon","2fa_section"); } // CODE - Add 2fa features
-function disable_two_fa() { errMsg(gbl.thumb+"&nbsp;Coming Soon","2fa_section"); } // CODE - Add 2fa features
-
-
-
-function user_settings(with_push)
-{
-	if (with_push) push_hist("user_settings");
-	hidePopUp();
-	user_settings_page(user_general_settings);
-	size_one_space();
-	document.editUserDetails.user_email.focus();
-}
-
-
-
-function user_settings_page(func)
-{
-	let x = "<table align=center style='min-width: 75%;' cellspacing=3 cellpadding=0 border=0>";
-	x += "<tr><td class=btmBtnBar>";
-	x += "<button style='width: 135px;' onClick='user_settings_page(user_general_settings);' class=myBtn>General</button>";
-	x += "<button style='width: 135px;' onClick='start_email_blocking();' class=myBtn>Emails</button>";
-	x += "</td></tr><tr><td>" + func() + "</td></tr></table>";
-	elm.userSpace.innerHTML = x;
 }
 
 

@@ -5,6 +5,7 @@
 import os
 import time
 import json
+import shutil
 import argparse
 import subprocess
 
@@ -32,12 +33,22 @@ PASSWD_FILE_PERMS = {
 }
 
 
+def remove_home_dir(data):
+    if "user" not in data or "uid" not in data:
+        return False
+    path = os.path.join(policy.HOME_DIR, data["user"])
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+    return True
+
+
 def make_home_dir(data):
     if "user" not in data or "uid" not in data:
         return False
     path = os.path.join(policy.HOME_DIR, data["user"])
     if not os.path.isdir(path):
         os.mkdir(path)
+    os.chmod(path, 0o700)
     os.chown(path, data["uid"], get_gid("users"))
     return True
 
@@ -84,6 +95,7 @@ ROOT_CMDS = {
     "install_unix_files": install_unix_files,
     "start_up_new_files": start_up_new_files,
     "make_home_dir": make_home_dir,
+    "remove_home_dir": remove_home_dir,
     "test": test_test
 }
 

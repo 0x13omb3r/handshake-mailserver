@@ -40,7 +40,7 @@ class Policy:
         self.POLICY_FILE = POLICY_FILE
         self.DOMAINS_FILE = DOMAINS_FILE
         self.USER_DIR = os.path.join(BASE, "data", "service", "users")
-        self.HOME_DIR = os.path.join(BASE, "data", "service", "homedirs")
+        self.HOME_DIR = os.path.join(BASE, "data", "homedirs")
 
         if not os.path.isfile(POLICY_FILE):
             with open(POLICY_FILE, "w+") as fd:
