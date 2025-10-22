@@ -9,7 +9,7 @@ import sys
 
 import misc
 import resolv
-import usercfg
+import uconfig
 import fileloader
 import icann_tlds
 # from log import this_log as log
@@ -163,7 +163,7 @@ def pre_check_user(user, is_new):
     if tld in icann_tlds.ICANN_TLDS and not policy.get("allow_icann_domains"):
         return False, "ICANN domains are not allowed"
 
-    file, __ = usercfg.user_file_name(user, True)
+    file = uconfig.user_file_name(user, True)
     already_in_use = (user in used_domains.data()) or (os.path.isfile(file))
 
     if is_new and already_in_use:

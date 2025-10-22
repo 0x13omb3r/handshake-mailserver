@@ -25,7 +25,7 @@ def calc_hash(user):
     return [ret[:2], ret[2:]]
 
 
-def user_file_name(user, with_make_dir=False):
+def user_file_name(user, with_make_dir=False, with_lock_name=False):
     this_hash = calc_hash(user)
     if with_make_dir:
         d = CFG_DIR
@@ -34,7 +34,10 @@ def user_file_name(user, with_make_dir=False):
             if not os.path.isdir(d):
                 os.mkdir(d, mode=0o755)
     path = os.path.join(CFG_DIR, "users", this_hash[0], this_hash[1])
-    return os.path.join(path, user + ".json"), os.path.join(path, ".lock")
+    if with_lock_name:
+        return os.path.join(path, user + ".json"), os.path.join(path, ".lock")
+    else:
+        return os.path.join(path, user + ".json")
 
 
 def return_user(js, user):
@@ -46,7 +49,7 @@ def return_user(js, user):
 
 
 def user_info_load(user):
-    user_file, __ = user_file_name(user)
+    user_file = user_file_name(user)
     if not os.path.isfile(user_file):
         return None, "File not found"
 
@@ -58,7 +61,7 @@ def user_info_load(user):
 
 
 def user_info_update(user, data):
-    user_file, lock_file = user_file_name(user)
+    user_file, lock_file = user_file_name(user, with_lock_name=True)
     if not os.path.isfile(user_file):
         return None
 

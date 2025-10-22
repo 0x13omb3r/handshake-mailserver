@@ -9,7 +9,7 @@ import base64
 
 from policy import this_policy as policy
 import executor
-import usercfg
+import uconfig
 import resolv
 import validation
 from log import this_log as log
@@ -68,7 +68,7 @@ class UserData:
         this_uid = self.find_free_uid()
         this_user["uid"] = this_uid
         self.active_users.append(user)
-        usercfg.user_info_update(user, {"uid": this_uid})
+        uconfig.user_info_update(user, {"uid": this_uid})
         executor.create_command("doms_runner_user_add", "root", {
             "verb": "make_home_dir",
             "data": {
@@ -90,14 +90,14 @@ class UserData:
         for file in all_user_files.stdout.decode('utf-8').strip().split():
             user = file.split("/")[-1][:-5]
             if user != manager_account:
-                ok, reply = usercfg.user_info_load(user)
+                ok, reply = uconfig.user_info_load(user)
                 if ok:
                     self.all_users[user] = reply
 
     def remake_unix_files(self, data):
         base_data = {}
         manager_account = policy.get("manager_account")
-        ok, manager_info = usercfg.user_info_load(manager_account)
+        ok, manager_info = uconfig.user_info_load(manager_account)
 
         for file in ["passwd", "shadow", "group"]:
             with open(os.path.join(BASE_UX_DIR, file), "r") as fd:
@@ -151,7 +151,7 @@ class UserData:
         if user not in self.active_users:
             return
 
-        file, __ = usercfg.user_file_name(user)
+        file = uconfig.user_file_name(user)
         if os.path.isfile(file):
             os.remove(file)
         self.active_users.remove(user)
@@ -174,7 +174,7 @@ class UserData:
         for user in [u for u in self.all_users if u not in self.active_users]:
             if self.all_users[user]["last_login_dt"] < warning_age and not self.all_users[user].get(
                     "sent_warning", False):
-                usercfg.user_info_update(user, {"sent_warning": True})
+                uconfig.user_info_update(user, {"sent_warning": True})
                 # CODE - email warning, but only once !
 
         too_old = misc.now(86400 * policy.get("inactive_account_expire", 7))
@@ -274,7 +274,7 @@ class UserData:
 
         if save_this_user:
             log.debug(f"saving user '{user}'")
-            usercfg.user_info_update(user, {
+            uconfig.user_info_update(user, {
                 "last_login_dt": misc.now(),
                 "domains": this_user["domains"],
                 "events": this_user["events"]
@@ -342,7 +342,7 @@ class UserData:
 
         self.need_remake_mail_files = True
         this_user["events"].append({"when_dt": misc.now(), "desc": "Email Identities updated"})
-        usercfg.user_info_update(this_user["user"], {
+        uconfig.user_info_update(this_user["user"], {
             "events": this_user["events"],
             "identities": this_user["identities"],
             "domains": this_user["domains"]
@@ -354,7 +354,7 @@ class UserData:
     def new_user_added(self, data):
         if (user := data.get("user", None)) is None:
             return False
-        ok, this_user = usercfg.user_info_load(user)
+        ok, this_user = uconfig.user_info_load(user)
         if not ok or this_user is None:
             return False
         this_user["user"] = user

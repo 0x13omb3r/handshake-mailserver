@@ -15,7 +15,7 @@ import validators
 from policy import this_policy as policy
 import executor
 import validation
-import usercfg
+import uconfig
 import misc
 from log import this_log as log
 
@@ -62,14 +62,14 @@ def login(sent_data, user_agent):
     if sent_data.get("user", None) is None or sent_data.get("password", None) is None:
         return False, "Insufficient data"
 
-    ok, user_data = usercfg.user_info_load(sent_data["user"])
+    ok, user_data = uconfig.user_info_load(sent_data["user"])
     if not ok or user_data is None or "password" not in user_data:
         return False, f"User '{sent_data['user']}' not found or missing password"
 
     if not compare_passwords(sent_data["password"], user_data["password"]):
         return False, "Password does no match"
 
-    usercfg.user_info_update(sent_data["user"], {"sent_warning": False, "last_login_dt": misc.now()})
+    uconfig.user_info_update(sent_data["user"], {"sent_warning": False, "last_login_dt": misc.now()})
     return create_session_file(sent_data["user"], user_data, user_agent)
 
 
@@ -91,7 +91,7 @@ def check_session(session_code, user_agent):
         os.remove(file)
         return False, "Session file missing data or user-agent mismatch"
 
-    ok, user_data = usercfg.user_info_load(js["user"])
+    ok, user_data = uconfig.user_info_load(js["user"])
     if not ok or user_data is None:
         return False, "User in session file doesn't exist"
 
@@ -102,7 +102,7 @@ def check_session(session_code, user_agent):
 
 
 def check_password(user, sent_data):
-    ok, user_data = usercfg.user_info_load(user)
+    ok, user_data = uconfig.user_info_load(user)
     return compare_passwords(sent_data["password"], user_data["password"])
 
 
@@ -151,7 +151,7 @@ def register(sent_data, user_agent):
         }
     }
 
-    file, __ = usercfg.user_file_name(user, True)
+    file = uconfig.user_file_name(user, True)
     with open(file, "w+") as fd:
         json.dump(user_data, fd, indent=2)
 
@@ -160,7 +160,7 @@ def register(sent_data, user_agent):
 
 
 def close_account(user):
-    file, __ = usercfg.user_file_name(user)
+    file = uconfig.user_file_name(user)
     log.debug(f"close_account: {user} - {file}")
     if not os.path.isfile(file):
         return False, "User not found"
@@ -171,13 +171,13 @@ def close_account(user):
 
 
 def password_new(user, password):
-    usercfg.user_info_update(user, {"password": encrypt(password)})
+    uconfig.user_info_update(user, {"password": encrypt(password)})
     executor.create_command("webui_password_changed", "doms", {"verb": "password_changed"})
     return True
 
 
 if __name__ == "__main__":
-    print("INFO LOAD ->", usercfg.user_info_load("lord.webmail"))
+    print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
 
 
 def debug_stuff():
@@ -189,11 +189,11 @@ def debug_stuff():
             "password": "yes",
             "confirm": "yes"
         }, "my-agent"))
-    # print(usercfg.user_info_load("james"))
-    # print(usercfg.user_info_update("james", {"user": "james", "password": "fred"}))
-    # print(usercfg.user_info_load("james"))
-    # print(usercfg.user_info_update("james", None))
-    # print(usercfg.user_info_load("james"))
+    # print(uconfig.user_info_load("james"))
+    # print(uconfig.user_info_update("james", {"user": "james", "password": "fred"}))
+    # print(uconfig.user_info_load("james"))
+    # print(uconfig.user_info_update("james", None))
+    # print(uconfig.user_info_load("james"))
     # print(password_compare("yes","lord.webmail"))
     # print(check_session("abc123","fred"))
 
@@ -203,9 +203,9 @@ def debug_stuff():
         print("CHECK_SESSION ->", check_session(uid["session"], "my-agent"))
 
     print("")
-    print("INFO LOAD ->", usercfg.user_info_load("lord.webmail"))
-    print("INFO ADD ->", usercfg.user_info_update("lord.webmail", {"temp": "value"}))
-    print("INFO LOAD ->", usercfg.user_info_load("lord.webmail"))
-    print("INFO ADD ->", usercfg.user_info_update("lord.webmail", {"temp": None}))
-    print("INFO LOAD ->", usercfg.user_info_load("lord.webmail"))
+    print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
+    print("INFO ADD ->", uconfig.user_info_update("lord.webmail", {"temp": "value"}))
+    print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
+    print("INFO ADD ->", uconfig.user_info_update("lord.webmail", {"temp": None}))
+    print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
     # print(make_session_code("james"))
