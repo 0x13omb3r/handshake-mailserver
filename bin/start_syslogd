@@ -8,10 +8,21 @@ if test "${SYSLOG_SERVER}"
 		exec /bin/busybox syslogd -n -R ${SYSLOG_SERVER}
 	fi
 
-if test "${DEBUG_MODE}" = "Y" -o "${SYSLOG_STDOUT}" = "Y"
+if test "${SYSLOG_STDOUT}" = "Y"
 	then
-		exec /bin/busybox syslogd -n -O -
+		if test "${DEBUG_MODE}" = "Y"
+			then
+				exec /bin/busybox syslogd -n -O -
+			else
+				exec /bin/busybox syslogd -f /usr/local/etc/syslog_stdout.conf -n
+			fi
 	fi
 
 mkdir -p /opt/data/logs
-exec /sbin/syslogd -f /usr/local/etc/syslog.conf -r -n
+
+if test "${DEBUG_MODE}" = "Y"
+	then
+		exec /bin/busybox syslogd -n -b 9 -s 100000 -O /opt/data/logs/messages
+	fi
+
+exec /bin/busybox syslogd -f /usr/local/etc/syslog.conf -n

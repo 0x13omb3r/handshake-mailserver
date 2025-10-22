@@ -5,9 +5,10 @@ echo "=================== [$(date)] INITALIZING ==================="
 . /usr/local/bin/inc
 
 mkdir -p ${BASE}/pems \
-	${BASE}/data/service/sasl2 ${BASE}/data/homedirs ${BASE}/data/mailboxes \
+	${BASE}/data/sasl2 ${BASE}/data/homedirs ${BASE}/data/mailboxes \
 	${BASE}/postfix/data/ ${BASE}/postfix/spool/
 chmod 755 ${BASE}/data/homedirs ${BASE}/data/mailboxes
+chown 0:0 ${BASE}/data/homedirs ${BASE}/data/mailboxes
 
 for file in group passwd shadow
 do
@@ -22,20 +23,20 @@ if ! test -f ${BASE}/data/service/used_domains.json
 	then
 		echo "{}" > ${BASE}/data/service/used_domains.json
 	fi
-chown -R 850: ${BASE}/data/service/users ${BASE}/data/service/sessions ${BASE}/data/service/*.json ${BASE}/data/service/*.eml
 
 /usr/local/python/doms_runner.py -O remake_unix_files
-/usr/local/python/root_runner.py -O install_unix_files
+/usr/local/python/root_runner.py -O install_system_files
 
 mkdir -p /run/exec/root /run/exec/doms ${BASE}/data/service/sessions
 chmod 777 /run/exec/root /run/exec/doms ${BASE}/data/service/sessions
-chown service: /run/exec/doms ${BASE}/data/service/sessions
-
+chown service: /run/exec/doms
 
 ${PYBASE}/merge_templates.py
 . /run/templates/__include__
 /usr/local/python/doms_runner.py -O remake_mail_files
-/usr/local/python/root_runner.py -O install_mail_files
+/usr/local/python/root_runner.py -O install_system_files
+
+chown -R service: ${BASE}/data/service/.
 
 if ! test -d ${BASE}/data/homedirs/${POLICY_MANAGER_ACCOUNT}
 	then
@@ -65,7 +66,6 @@ if ! test -s ${BASE}/pems/server.pem
 cp -a ${BASE}/pems/server.pem /run/pems/server.pem
 chmod 644 /run/pems/server.pem
 
-
 if ! test -f /etc/sasl2/smtpd.conf
 	then
 		{
@@ -78,6 +78,7 @@ if ! test -f /etc/sasl2/smtpd.conf
 postfix set-permissions >/dev/null 2>&1
 
 chown -R postfix: ${BASE}/postfix/data
+chmod 775 ${BASE}/postfix/data
 for file in transport virtual
 do
 	pfx="${BASE}/postfix/data/${file}"
@@ -85,7 +86,6 @@ do
 	rm -f ${pfx}.lmdb
 	postmap ${BASE}/postfix/data/${file}
 done
-
 
 mkdir /run/nginx; chown nginx: /run/nginx
 
@@ -113,4 +113,5 @@ chmod 700 ${BASE}/data/rainloop
 chown -R rainloop: ${BASE}/data/rainloop
 
 echo "=================== [$(date)] STARTING ==================="
+
 exec /sbin/init

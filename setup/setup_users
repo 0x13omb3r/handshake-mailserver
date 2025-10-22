@@ -14,6 +14,8 @@ adduser -u 850 -S -h /dev/null -G service service
 addgroup -g 851 -S rainloop
 adduser -u 851 -S -h /dev/null -G rainloop rainloop
 
+addgroup service postfix
+
 for user in lp news uucp cron ftp sshd games ntp guest
 	do
 		deluser ${user}

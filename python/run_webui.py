@@ -215,10 +215,20 @@ def users_close():
     return req.response("OK")
 
 
-@application.route('/wmapi/password/reset', methods=['GET'])
+@application.route('/wmapi/password/request', methods=['POST'])
+def password_request():
+    req = WebuiReq()
+    log.log(f"password/request: {req.post_js}")
+    if users.password_request(req.user, req.post_js):
+    	return req.response("OK")
+    return req.abort("Coming Soon")
+
+
+@application.route('/wmapi/password/reset', methods=['POST'])
 def password_reset():
-    # CODE - reset / recover password
-    pass
+    req = WebuiReq()
+    # CODE - actually reset password
+    return req.abort("Coming Soon")
 
 
 def main():

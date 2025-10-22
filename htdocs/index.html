@@ -137,11 +137,9 @@ function togglePopUp(name,tmout)
 	if (name=="AddDSPopup") e = document.getElementById("ds_keyTag");
 	if (name=="AddRRwin") e = document.getElementById("rr_name");
 	if (name=="AddTLSAwin") e = document.getElementById("tlsa_o");
-	if (name=="emojiPopup") e = document.getElementById("emojiSearch");
 	if (name=="TopUpAcct") e = document.getElementById("top_up_amount");
 	if (e) {
 		e.focus(); e.select();
-		if (name=="emojiPopup") show_emoji_search();
 		}
 	return false;
 }
@@ -192,9 +190,27 @@ function do_size_one_space()
     document.body.style.height = sz;
 }
 
+
+
 function activate_account_instructions()
 {
-	return "Account not active yet"
+	let my_gap = "<div style='height: 20px;'></div>";
+	let x = "<table width=75% align=center border=0>";
+	x += settings_header(`Welcome to the ${gbl.config.policy.website_title} Service`);
+	x += `<tr><td style="white-space: normal">`;
+	x += `As of right now, your <b>${ctx.user.user}</b> account is not yet activated. You will NOT be able to use the email service until you activate your account. `;
+	x += `To activate this account you must add a DNS MX record into the domain <b>${ctx.user.user}</b>. It will need to look like this<p>`
+	x += my_gap+`<xmp>${ctx.user.user}.       600       IN       MX      10 ${ctx.user.mx}.${gbl.config.policy.default_mail_domain}.</xmp>`;
+	x += my_gap+"This is to ensure your email arrives here and you can prove you own the domain."
+	x += my_gap+"We will look for this record every fifteen miniutes, but due to DNS delays, it could take up to 24 hours for us to";
+	x += " be able to see it.<P>Once we see it, your account will be activated and you will be able to send & receive emails in the domain";
+	x += " by logging into the <a target=_blank href='/webmail/'>Web Mail interface</a> and adding 'Identities' with email addresses in your domain.";
+	x += my_gap+"You can add other domains to this account by adding identites in other domains and activating those domains by ";
+	x += "inserting the same MX record above in those other domains.<P>";
+	x += `If you go to the <a href=# onClick="myStuff(true,'myDomains'); return false;">Domains</a> page, you will see what email addresses and domains have been set up and which are active.`;
+	x += my_gap+"NOTE: For each registered account, all email will arrive in the same INBOX, one per registered account. ";
+	x += "To have different domains arrive in different INBOXes, you will need to register one account per INBOX.";
+	return x+gbl.settings_spacer+"</td></tr></table>";
 }
 
 
@@ -219,10 +235,6 @@ function loggedIn()
 	user_info();
 	show_one_space("userSpace");
 
-	if (is_user_active())
-		myStuff(true,"myDomains");
-	else
-		elm.userSpace.innerHTML = activate_account_instructions();
 }
 
 
@@ -242,16 +254,6 @@ function user_info()
 		}
 }
 
-
-
-
-function send_confirm_email()
-{
-	callApi("email/sendverify",(ok,reply) => {
-		if (!ok) return def_errMsg("Failed to send verification email",reply,"errorSpan");
-		elm.userSpace.innerHTML = "<h2>"+gbl.tick+"&nbsp;Verification email sent</h2>";
-		});
-}
 
 
 
@@ -401,6 +403,18 @@ function push_hist(data)
 	window.history.pushState(data,"",policy("website_name"));
 }
 
+function changeFavicon(src)
+{
+	let link = document.createElement('link'),
+	oldLink = document.getElementById('dynamic-favicon');
+
+	link.id = 'dynamic-favicon';
+	link.rel = 'shortcut icon';
+	link.href = src;
+	if (oldLink) gbl.head.removeChild(oldLink);
+	gbl.head.appendChild(link);
+}
+
 
 function go_welcome(with_push)
 {
@@ -415,12 +429,23 @@ function go_welcome(with_push)
 
 		catch_user_data(reply);
 		if (ctx.policy) gbl.config = {"policy":ctx.policy};
-		elm.businessName.innerHTML = `<a href="https://${policy("website_domain","#")}">${policy("website_title","WebMail")}</a>`;
+
+		let my_icon = policy("icon","milkshake.png");
+		let site_name = policy("website_title","Web Mail");
+		document.title = site_name;
+		changeFavicon("/icons/"+my_icon)
+		site_name = `<img height=32 style="vertical-align:bottom" src="/icons/${my_icon}">&nbsp;${site_name}`;
+		elm.businessName.innerHTML = `<a href="https://${policy('website_domain')}/">${site_name}</a>`;
+
         if (ctx.session) {
             callApi("users/details",(ok,reply) => {
                 if (ok) {
                     catch_user_data(reply);
                     loggedIn();
+					if (is_user_active())
+						myStuff(true,"myDomains");
+					else
+						elm.userSpace.innerHTML = activate_account_instructions();
                     }
                 check_router_path();
                 });
@@ -653,7 +678,7 @@ function userDetails()
 
     x += settings_header("Change Your Password");
     x += "<form name=editUserPassword method=post action=# onSubmit='postUserPassword(); return false;'>";
-    x += "<table id=editUserPassword width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
+    x += "<tr><td><table id=editUserPassword width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
     x += form_prompt("Current Password");
     x += `<input style="width: 300px;" autocomplete="current-password" placeholder="Current password" type=password id='password'></td></tr>`;
     x += form_prompt("<b>New</b> Password");
@@ -666,7 +691,7 @@ function userDetails()
 	if ((ctx.user.user)&&(ctx.user.user!=policy("manager_account"))) {
 		x += settings_header("Close This Account");
 		x += "<form name=editCloseAccount method=post action=# onSubmit='postCloseAccount(); return false;'>";
-		x += "<table id=editCloseAccount width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
+		x += "<tr><td><table id=editCloseAccount width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
 		x += "<tr><td colspan=2>To close your account, please enter your current password</td></tr>";
 		x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
 		x += form_prompt("Current Password");
@@ -702,15 +727,15 @@ function domainDetails()
 {
 	let x = "<table align=center width=75%>"
 	x += settings_header("My Domains",true);
-	x += "<table width=100%>"
+	x += "<tr><td><table width=100%>"
 	x += "<colgroup><col/><col width=200px/></colgroup>"
-	for(let i in ctx.user.domains) x += `<tr><td>${toUnicode(i)}</td><td>${(ctx.user.domains[i])?gbl.tick:gbl.cross}</td></tr>`;
+	for(let i in ctx.user.domains) x += `<tr class=dataRow><td>${toUnicode(i)}</td><td class=emoji>${(ctx.user.domains[i])?gbl.tick:gbl.cross}</td></tr>`;
 	x += "</table></td></tr>";
 	x += settings_header("My Email Addresses",false);
-	x += "<table width=100%>"
+	x += "<tr><td><table width=100%>"
 	x += "<colgroup><col/><col width=200px/></colgroup>"
-	x += `<tr><td>${ctx.user.user}@${toUnicode(policy("default_mail_domain"))}</td><td>${is_user_active()?gbl.tick:gbl.cross}</td></tr>`;
-	for(let i in ctx.user.identities) x += `<tr><td>${email_as_unicode(ctx.user.identities[i])}</td><td>${is_email_active(ctx.user,i)?gbl.tick:gbl.cross}</td></tr>`;
+	x += `<tr class=dataRow><td>${ctx.user.user}@${toUnicode(policy("default_mail_domain"))}</td><td class=emoji>${is_user_active()?gbl.tick:gbl.cross}</td></tr>`;
+	for(let i in ctx.user.identities) x += `<tr class=dataRow><td>${email_as_unicode(ctx.user.identities[i])}</td><td>${is_email_active(ctx.user,i)?gbl.tick:gbl.cross}</td></tr>`;
 	x += "</table></td></tr>";
 	return x+"</table>";
 }
@@ -817,16 +842,16 @@ function resend_password(with_push)
 	if (with_push) push_hist("resend_password");
 	hideAllPopUp()
 	pin_code = (Math.trunc(Math.random()*1000000)).toString().slice(-4);
-	let x = "<form name=resendPass action=# method=post onSubmit='return submit_resend();'><table width=75% id='resend_table' align=center border=0>";
+	let x = "<form name=resendPass action=# method=post onSubmit='return submit_resend();'><table width=65% id='resend_table' align=center border=0>";
 	x += settings_header("Reset Password",true);
-	x += "Enter your email address below and we will email you a link to reset your password</td></tr>";
+	x += "<tr><td>Enter your email address below and we will email you a link to reset your password</td></tr>";
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
 	x += "<tr><Td style='white-space: normal;'>When you click the password reset link in the email, you will be asked for the PIN number shown below. ";
-	x += "You will <B>NOT</b> be able to reset your password without this PIN Number</td></tr>"
+	x += "<br>You will <B>NOT</b> be able to reset your password without this PIN Number</td></tr>"
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
 	x += `<tr><td><h2>${pin_code}</h2></td></tr>`;
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
-	x += "<tr><td><table width=100%><tr><td class=formPrompt>Your email address:</td>";
+	x += "<tr><td><table width=100%><tr><td class=formPrompt>Your recovery email address:</td>";
 	x += `<input type=hidden name=pin value='${pin_code}'>`;
 	x += "<td><input autofocus style='width: 350px;' name=email></td></tr>";
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
@@ -957,7 +982,25 @@ function make_theme_popup()
 <div style="height: 100px;">&nbsp;</div>
 
 <div id="allBottom">
-	<span class="botSpace" id="default" style="display: none;">General welcome message & instructions</span>
+	<span class="botSpace" id="default" style="display: none;">
+		<table align=center width=75%><tr><Th><h2>Welcome</h2></th></tr>
+		<tr><td><div style='height: 20px;'></div></td></tr>
+		<tr><td style="white-space: normal">
+		Welcome to a Handshake-aware WebMail Service. Using this service you can send and recive emails between email addresses in any Handshake Domain.
+		You can also send email to ICANN domains, if their SMTP Server uses an Handshake-aware DNS resolver.
+		<div style='height: 20px;'></div>
+		To use this service, you must
+		<li> Own a Handshake Domain and be able to configure it's DNS
+		<li> Register to use the domain on this site
+		<li> Add a DNS MX record we give you to  prove you own the domain and direct your email to this service
+		<P>
+		<div style='height: 20px;'></div>
+		You will be able to read your email through this webiste, by SSL-IMAP or SSL-POP3, but you will only be able to send email using the webmail service
+		on this site.
+		<div style='height: 20px;'></div>
+		To get started, click <b>Register</b> above.
+		</td></tr></table>
+	</span>
 	<span class="botSpace" id="userSpace" style="display: none;"></span>
 </div>
 

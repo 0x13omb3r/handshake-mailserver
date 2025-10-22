@@ -31,7 +31,12 @@ def make_session_code(user):
     hsh.update(str(user).encode("utf-8"))
     hsh.update(str(os.getpid()).encode("utf-8"))
     hsh.update(str(time.time()).encode("utf-8"))
-    return base64.b64encode(hsh.digest()).decode("utf-8").translate(str.maketrans({"/": "-", "=": "", "+": "_"}))
+    return base64.b64encode(hsh.digest()).decode("utf-8").translate(
+        str.maketrans({
+            "/": "-",
+            "=": "",
+            "+": "_"
+        }))
 
 
 def encrypt(password, salt=None):
@@ -59,7 +64,8 @@ def create_session_file(user, user_data, user_agent):
 
 
 def login(sent_data, user_agent):
-    if sent_data.get("user", None) is None or sent_data.get("password", None) is None:
+    if sent_data.get("user", None) is None or sent_data.get("password",
+                                                            None) is None:
         return False, "Insufficient data"
 
     ok, user_data = uconfig.user_info_load(sent_data["user"])
@@ -69,7 +75,7 @@ def login(sent_data, user_agent):
     if not compare_passwords(sent_data["password"], user_data["password"]):
         return False, "Password does no match"
 
-    uconfig.user_info_update(sent_data["user"], {"sent_warning": False, "last_login_dt": misc.now()})
+    uconfig.user_info_update(sent_data["user"], {"last_login_dt": misc.now()})
     return create_session_file(sent_data["user"], user_data, user_agent)
 
 
@@ -115,6 +121,36 @@ def logout(session_code, user, user_agent):
     return True, None
 
 
+def valid_reset_pin(pin):
+    if not isinstance(pin, str) or len(pin) != 4 or not pin.isdecimal():
+        return False, "Invalid PIN"
+    return True, None
+
+
+PASSWORD_REQUEST_WEB = {
+    "email": [True, validators.email],
+    "pin": [True, valid_reset_pin]
+}
+
+
+def password_request(user, sent_data):
+    log.log(f"{user}: {sent_data}")
+    ok, reply = validation.web_validate(sent_data, PASSWORD_REQUEST_WEB)
+    if not ok:
+        return False, reply
+
+    executor.create_command(
+        "webui_password_request", "doms", {
+            "verb": "password_request",
+            "data": {
+                "email": sent_data["email"],
+                "pin": sent_data["pin"]
+            }
+        })
+
+    return True, None
+
+
 REGISTER_WEB = {
     "user": [True, validation.web_valid_new_account],
     "email": [True, validators.email],
@@ -134,12 +170,12 @@ def register(sent_data, user_agent):
     user = sent_data["user"]
     now = misc.now()
     user_data = {
-        "mx": base64.b32encode(secrets.token_bytes(30)).decode("utf-8").lower(),
+        "mx":
+        base64.b32encode(secrets.token_bytes(30)).decode("utf-8").lower(),
         "password": encrypt(sent_data["password"]),
         "created_dt": now,
         "amended_dt": now,
         "last_login_dt": now,
-        "sent_warning": False,
         "email": sent_data["email"],
         "events": [{
             "when_dt": now,
@@ -155,7 +191,12 @@ def register(sent_data, user_agent):
     with open(file, "w+") as fd:
         json.dump(user_data, fd, indent=2)
 
-    executor.create_command("new_user_added", "doms", {"verb": "new_user_added", "data": {"user": user}})
+    executor.create_command("new_user_added", "doms", {
+        "verb": "new_user_added",
+        "data": {
+            "user": user
+        }
+    })
     return create_session_file(user, user_data, user_agent)
 
 
@@ -166,13 +207,19 @@ def close_account(user):
         return False, "User not found"
 
     os.remove(file)
-    executor.create_command("webui_account_closed", "doms", {"verb": "account_closed", "data": { "user": user } })
+    executor.create_command("webui_account_closed", "doms", {
+        "verb": "account_closed",
+        "data": {
+            "user": user
+        }
+    })
     return True, None
 
 
 def password_new(user, password):
     uconfig.user_info_update(user, {"password": encrypt(password)})
-    executor.create_command("webui_password_changed", "doms", {"verb": "password_changed"})
+    executor.create_command("webui_password_changed", "doms",
+                            {"verb": "password_changed"})
     return True
 
 
@@ -183,12 +230,13 @@ if __name__ == "__main__":
 def debug_stuff():
     print(
         "REGISTER >>>",
-        register({
-            "user": "anon.webmail",
-            "email": "earl@gmail.com",
-            "password": "yes",
-            "confirm": "yes"
-        }, "my-agent"))
+        register(
+            {
+                "user": "anon.webmail",
+                "email": "earl@gmail.com",
+                "password": "yes",
+                "confirm": "yes"
+            }, "my-agent"))
     # print(uconfig.user_info_load("james"))
     # print(uconfig.user_info_update("james", {"user": "james", "password": "fred"}))
     # print(uconfig.user_info_load("james"))
@@ -204,8 +252,10 @@ def debug_stuff():
 
     print("")
     print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
-    print("INFO ADD ->", uconfig.user_info_update("lord.webmail", {"temp": "value"}))
+    print("INFO ADD ->",
+          uconfig.user_info_update("lord.webmail", {"temp": "value"}))
     print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
-    print("INFO ADD ->", uconfig.user_info_update("lord.webmail", {"temp": None}))
+    print("INFO ADD ->",
+          uconfig.user_info_update("lord.webmail", {"temp": None}))
     print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
     # print(make_session_code("james"))

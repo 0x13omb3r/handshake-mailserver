@@ -11,6 +11,7 @@ from policy import this_policy as policy
 import executor
 import uconfig
 import resolv
+import sendmail
 import validation
 from log import this_log as log
 import misc
@@ -36,13 +37,17 @@ def clean_up_emails(emails):
     return new_list
 
 
+def active_uid(this_user):
+    return this_user.get("uid", 0) > 100
+
+
 class UserData:
     def __init__(self):
-        self.users_to_welcome = []
+        self.users_just_activated = {}
         self.need_remake_mail_files = False
         self.need_remake_unix_files = False
         self.resolver = None
-        self.active_users = None
+        self.active_users = {}
 
     def startup(self):
         self.resolver = resolv.Resolver()
@@ -50,11 +55,11 @@ class UserData:
 
     def load_user_details(self):
         self.load_users()
-        self.active_users = [user for user in self.all_users if validation.is_user_active(self.all_users[user])]
+        self.active_users = {user: True for user in self.all_users if validation.is_user_active(self.all_users[user])}
 
         for user in self.active_users:
             this_user = self.all_users[user]
-            if "uid" not in this_user:
+            if not active_uid(this_user):
                 self.assign_uid(this_user)
 
     def finish_start_uo(self):
@@ -62,12 +67,12 @@ class UserData:
         self.check_remake_files()
 
     def assign_uid(self, this_user):
-        if "uid" in this_user:
+        if active_uid(this_user):
             return
         user = this_user["user"]
         this_uid = self.find_free_uid()
         this_user["uid"] = this_uid
-        self.active_users.append(user)
+        self.active_users[user] = True
         uconfig.user_info_update(user, {"uid": this_uid})
         executor.create_command("doms_runner_user_add", "root", {
             "verb": "make_home_dir",
@@ -76,7 +81,6 @@ class UserData:
                 "user": user
             }
         })
-        self.users_to_welcome.append(user)
         self.need_remake_unix_files = True
 
     def load_users(self):
@@ -126,7 +130,7 @@ class UserData:
             lines = [line for line in base_data["group"] if line[:6] != "users:"]
             if ok:
                 lines.append(f"{manager_account}:x:900:{manager_account}")
-            lines.append("users:x:100:" + ",".join(self.active_users))
+            lines.append("users:x:100:" + ",".join(list(self.active_users)))
             fd.write("\n".join(lines) + "\n")
 
         for file in ["passwd", "shadow", "group"]:
@@ -137,32 +141,25 @@ class UserData:
     def find_free_uid(self):
         taken_uids = {
             self.all_users[user]["uid"]: True
-            for user in self.active_users if self.all_users[user].get("uid", 0) > 100
+            for user in self.active_users if active_uid(self.all_users[user])
         }
         for x in range(1000, 30000):
             if x not in taken_uids:
                 return x
         return None
 
-    def delete_user(self,user):
+    def delete_user(self, user):
         if user in self.all_users:
             del self.all_users[user]
-
-        if user not in self.active_users:
-            return
+        if user in self.active_users:
+            del self.active_users[user]
 
         file = uconfig.user_file_name(user)
         if os.path.isfile(file):
             os.remove(file)
-        self.active_users.remove(user)
-        self.need_remake_mail_files = self.need_remake_unix_files = True
 
-        executor.create_command("doms_delete_user", "root", {
-            "verb": "remove_homedir",
-            "data": {
-                "user": user
-            }
-        })
+        executor.create_command("doms_delete_user", "root", {"verb": "remove_home_dir", "data": {"user": user}})
+        self.need_remake_mail_files = self.need_remake_unix_files = True
 
     def user_age_check(self, data):
         log.debug("User age check")
@@ -170,21 +167,22 @@ class UserData:
         for user in self.all_users:
             self.check_one_user(self.all_users[user], check_all_domains=True)
 
-        warning_age = misc.now(86400 * (policy.get("inactive_account_expire", 7) / 2))
-        for user in [u for u in self.all_users if u not in self.active_users]:
-            if self.all_users[user]["last_login_dt"] < warning_age and not self.all_users[user].get(
-                    "sent_warning", False):
-                uconfig.user_info_update(user, {"sent_warning": True})
-                # CODE - email warning, but only once !
+        never_active_old = misc.now(-86400 * policy.get("never_active_account_expire", 7))
+        was_active_old = misc.now(-86400 * policy.get("was_active_account_expire", 30))
 
-        too_old = misc.now(86400 * policy.get("inactive_account_expire", 7))
         for user in [u for u in self.all_users if u not in self.active_users]:
-            if self.all_users[user]["last_login_dt"] < too_old:
-                self.delete_user(user)
+            this_user = self.all_users[user]
+            if active_uid(this_user):
+                if this_user["last_login_dt"] < was_active_old:
+                    self.delete_user(user)
+            else:
+                if this_user["last_login_dt"] < never_active_old:
+                    self.delete_user(user)
 
         return True
 
     def run_mx_check(self, data=None):
+        self.users_just_activated = {}
         if data is not None:
             self.check_one_user(data)
         else:
@@ -236,16 +234,19 @@ class UserData:
         log.debug(
             f"need_remake_mail_files: {self.need_remake_mail_files}, need_remake_unix_files: {self.need_remake_unix_files}"
         )
+
+        data = {"verb": "install_system_files"}
+
         if self.need_remake_mail_files:
             self.remake_mail_files(None)
-            executor.create_command("doms_runner_user_update", "root", {"verb": "install_mail_files"})
 
         if self.need_remake_unix_files:
             self.remake_unix_files(None)
-            data = {"verb": "install_unix_files"}
-            if len(self.users_to_welcome) > 0:
+            if len(self.users_just_activated) > 0:
                 data["data"] = {"with_doms_callback": "email_users_welcome"}
-            executor.create_command("doms_runner_user_update", "root", data)
+
+        if self.need_remake_mail_files or self.need_remake_unix_files:
+            executor.create_command("doms_check_remake_files", "root", data)
 
         self.need_remake_unix_files = self.need_remake_mail_files = False
 
@@ -258,19 +259,6 @@ class UserData:
         for dom in [d for d in doms if not doms[d] or check_all_domains]:
             if self.check_one_domain(this_user, dom):
                 save_this_user = True
-                self.need_remake_mail_files = True
-                if dom != user:
-                    # CODE - email user a new domain is now active, if secondary domain!
-                    pass
-            else:
-                if check_all_domains and doms[doms]:
-                    doms[dom] = False
-                    save_this_user = True
-                    self.need_remake_mail_files = True
-                    if dom == user:
-                        del this_user["uid"]
-                        del self.active_users[user]
-                        self.need_remake_unix_files = True
 
         if save_this_user:
             log.debug(f"saving user '{user}'")
@@ -281,24 +269,48 @@ class UserData:
             })
 
     def check_one_domain(self, this_user, domain):
-        if not validation.check_mx_match(this_user, self.resolver.resolv(domain, "mx")):
-            log.debug(f"check_one_domain FAIL: {this_user['user']} {domain}")
-            return False
+        user = this_user["user"]
+        was_active = this_user["domains"].get(domain, False)
+        dom_active = validation.check_mx_match(this_user, self.resolver.resolv(domain, "mx"))
+        log.debug(f"check_one_domain {user}:{domain} = {dom_active} (was {was_active})")
 
-        if this_user["user"] == domain:
-            self.assign_uid(this_user)
+        if dom_active == was_active:
+            return False  # domain status is unchanged
 
-        this_user["domains"][domain] = True
-        this_user["events"].append({"when_dt": misc.now(), "desc": f"Domain '{domain}' is now active"})
+        self.need_remake_mail_files = True
 
-        log.debug(f"check_one_domain PASS: {this_user['user']}, {domain}")
+        if user == domain:
+            if was_active:
+                del self.active_users[user]
+            else:
+                had_been_active = active_uid(this_user)
+                self.users_just_activated[user] = had_been_active
+                if had_been_active:
+                    log.debug(f"re-activated user {user}")
+                else:
+                    self.assign_uid(this_user)
+                    log.debug(f"newly activated user {user}")
+                self.active_users[user] = True
+            self.need_remake_unix_files = True
+        else:
+            log.debug(f"newly activated domains {domain}")
+            # CODE - send email for new domain
+
+        this_user["domains"][domain] = dom_active
+        this_user["events"].append({
+            "when_dt": misc.now(),
+            "desc": f"Domain '{domain}' is now {'active' if dom_active else 'inactive'}"
+        })
+
         return True
 
     def email_users_welcome(self, data):
-        for user in self.users_to_welcome:
-            log.debug(f"Email welcome to '{user}'")
-        self.users_to_welcome = []
-        # CODE - send out welcome email
+        for user, is_new in self.users_just_activated.items():
+            email_type = "welcome.eml" if is_new else "reactivated.eml"
+            log.debug(f"Email {email_type} to '{user}'")
+            # CODE - send out {email_type} email
+
+        self.users_just_activated = {}
         return True
 
     def identity_changed(self, data):
@@ -332,7 +344,6 @@ class UserData:
 
         for dom in email_doms:
             if dom not in this_user["domains"]:
-                # CODE - Should we email users to say we just saw their new domain ?
                 this_user["domains"][dom] = False
 
         this_user["identities"].sort()
@@ -341,6 +352,7 @@ class UserData:
             return True
 
         self.need_remake_mail_files = True
+
         this_user["events"].append({"when_dt": misc.now(), "desc": "Email Identities updated"})
         uconfig.user_info_update(this_user["user"], {
             "events": this_user["events"],
@@ -385,6 +397,19 @@ class UserData:
             return True
         return False
 
+    def find_user_by_email(self,email):
+        for user in self.all_users:
+            if self.all_users[user].get("email","") == email:
+                return user
+        return None
+
+    def password_request(self,data):
+        if (email := data.get("email",None)) is None or (pin := data.get("pin",None)) is None or (user := self.find_user_by_email(email)) is None:
+            return False
+        # CODE - more code for making password reset email
+        data = { "user":self.all_users[user],"pin":pin }
+        return sendmail.post("password_reset",data)
+
 
 def test_test(data):
     log.log(f"TEST DOMS: {data}, Users: {len(Users.all_users)}, Active: {len(Users.active_users)}")
@@ -404,6 +429,7 @@ DOMS_CMDS = {
     "start_up_new_files": Users.start_up_new_files,
     "password_changed": Users.password_changed,
     "account_closed": Users.account_closed,
+    "password_request": Users.password_request,
     "test": test_test
 }
 

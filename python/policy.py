@@ -10,7 +10,6 @@ import fileloader
 
 DEFAULT_POLICY_VALUES = {
     "default_mail_domain": "webmail.localhost",
-    "mx_mail_domain": "mx.example.com",
     "website_domain": "example.com",
     "website_title": "Handshake Webmail",
     "site_fqdn": "handshake.webmail",
@@ -24,7 +23,8 @@ DEFAULT_POLICY_VALUES = {
     "allow_icann_domains": False,
     "allowable_referrer": None,
     "session_expiry": 60 * 60 * 2,
-    "inactive_account_expire": 7,
+    "never_active_account_expire": 7,
+    "was_active_account_expire": 30,
     "manager_account": "manager"
 }
 
@@ -41,6 +41,7 @@ class Policy:
         self.DOMAINS_FILE = DOMAINS_FILE
         self.USER_DIR = os.path.join(BASE, "data", "service", "users")
         self.HOME_DIR = os.path.join(BASE, "data", "homedirs")
+        self.MBOX_DIR = os.path.join(BASE, "data", "mailboxes")
 
         if not os.path.isfile(POLICY_FILE):
             with open(POLICY_FILE, "w+") as fd:

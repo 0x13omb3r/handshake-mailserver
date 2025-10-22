@@ -67,9 +67,9 @@ function theme_css(theme) {
 	border-radius: 6px;
 	border: 1px solid;
 	border-color: #${cols[10]};
-	font-size: 25px;
+	font-size: 15px;
 	cursor: pointer;
-	width: 70px;
+	width: 50px;
 	white-space: nowrap;
 	padding: 1px 7px;
 	margin-top: 0px;

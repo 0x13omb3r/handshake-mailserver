@@ -34,11 +34,14 @@ PASSWD_FILE_PERMS = {
 
 
 def remove_home_dir(data):
-    if "user" not in data or "uid" not in data:
+    if "user" not in data:
         return False
     path = os.path.join(policy.HOME_DIR, data["user"])
     if os.path.isdir(path):
         shutil.rmtree(path)
+    path = os.path.join(policy.MBOX_DIR, data["user"])
+    if os.path.isfile(path):
+        os.remove(path)
     return True
 
 
@@ -53,20 +56,16 @@ def make_home_dir(data):
     return True
 
 
-def install_mail_files(data):
+def install_system_files(data):
     for file in ["transport", "virtual"]:
         pfx = os.path.join(policy.BASE, "postfix", "data", file)
         new = pfx + ".new"
         if os.path.isfile(new):
             os.chown(new, POSTFIX_UNIX_ID, POSTFIX_UNIX_ID)
             os.replace(new, pfx)
-            subprocess.run(["/usr/sbin/postmap", pfx])
-            # subprocess.run(["postmap", pfx], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, check=True)
+            subprocess.run(["/usr/sbin/postmap", pfx], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
             os.chown(pfx + ".lmdb", POSTFIX_UNIX_ID, POSTFIX_UNIX_ID)
-    return True
 
-
-def install_unix_files(data):
     for file in ["passwd", "shadow", "group"]:
         src = f"/run/{file}.new"
         if os.path.isfile(src):
@@ -74,14 +73,10 @@ def install_unix_files(data):
             os.chmod(src, perm)
             os.chown(src, uid, gid)
             os.replace(src, f"/run/{file}")
+
     if data is not None and isinstance(data, dict) and (callback := data.get("with_doms_callback", None)) is not None:
-        executor.create_command("install_unix_files", "doms", {"verb": callback})
-    return True
+        executor.create_command("install_system_files", "doms", {"verb": callback})
 
-
-def start_up_new_files(data):
-    install_mail_files(data)
-    install_unix_files(data)
     return True
 
 
@@ -91,9 +86,7 @@ def test_test(data):
 
 
 ROOT_CMDS = {
-    "install_mail_files": install_mail_files,
-    "install_unix_files": install_unix_files,
-    "start_up_new_files": start_up_new_files,
+    "install_system_files": install_system_files,
     "make_home_dir": make_home_dir,
     "remove_home_dir": remove_home_dir,
     "test": test_test
@@ -122,7 +115,7 @@ def runner(to_syslog):
 
 
 def run_tests():
-    install_unix_files(None)
+    install_system_files(None)
     print(PASSWD_FILE_PERMS)
     print(get_gid("shadow"))
 

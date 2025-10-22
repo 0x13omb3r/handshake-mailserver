@@ -30,12 +30,15 @@ RUN apk add ldns-tools openssl
 RUN apk add python3 py3-jinja2 py3-passlib py3-flask py3-filelock
 RUN apk add py3-validators py3-idna py3-gunicorn py3-dnspython
 RUN apk add php84-fpm php84-curl php84-iconv php84-dom
-RUN apk add jq sysklogd logrotate
+RUN apk add jq
 
 
 COPY etc /usr/local/etc/
 RUN mkdir -p /usr/local/etc/uid
+RUN chmod 750 /usr/local/etc/uid
 RUN cp -a /etc/passwd /etc/shadow /etc/group /usr/local/etc/uid
+RUN chmod 640 /usr/local/etc/uid/*
+RUN chgrp -R service /usr/local/etc/uid
 RUN cp -a /etc/passwd /etc/shadow /etc/group /run
 
 RUN chown -R rainloop: /usr/local/etc/data
@@ -60,12 +63,12 @@ COPY config/php.ini /etc/php84/php.ini
 COPY cron/every_hour /etc/periodic/hourly/
 COPY cron/every_day /etc/periodic/daily/
 COPY cron/every_15min /etc/periodic/15min/
-RUN rm /etc/logrotate.d/* /etc/periodic/daily/sysklogd /etc/syslog.conf
-COPY config/logrotate.conf /etc/logrotate.conf
 
 COPY bin /usr/local/bin/
 COPY htdocs /usr/local/htdocs/
 
 COPY python /usr/local/python
+RUN rm -rf /usr/local/python/.style.yapf /usr/local/python/pyproject.toml /usr/local/python/.ruff_cache
 RUN python3 -m compileall /usr/local/python
+
 CMD [ "/usr/local/bin/run_init" ]

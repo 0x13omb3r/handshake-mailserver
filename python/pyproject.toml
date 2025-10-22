@@ -1,6 +1,0 @@
-[tool.ruff]
-line-length = 119
-
-# 'D'
-lint.extend-select = ["C4","SIM","TCH","B", "I",  "S"]
-lint.ignore = ["SIM105","F403","I001","S603"]

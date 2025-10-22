@@ -30,7 +30,7 @@ function callApi(sfx,callback,inData)
 		return callback(ok,reply);
 	}
 
-	function check_session(headers)
+	function check_session(headers,data)
 	{
 		let got_ses = false;
 		headers.forEach((val, key) => {
@@ -100,7 +100,7 @@ function callApi(sfx,callback,inData)
 						console.log("API>>> BAD",response.status,response.statusText);
 						}
 					if (response.status != 299) return we_are_done(false,{"error":"Unexecpted System Error"});
-					check_session(response.headers);
+					check_session(response.headers,data);
 					try {
 						return we_are_done(false,JSON.parse(data));
 					} catch {
@@ -256,7 +256,7 @@ function settings_header(title,spacer)
 {
     let x = "";
     if (!spacer) x = gbl.settings_spacer;
-    x += `<tr><td class=settingsBanner>${title}</td></tr><tr><td>`;
+    x += `<tr><td class=settingsBanner>${title}</td></tr>`;
     return x;
 }
 
@@ -326,3 +326,4 @@ function local_date(date_time)
 }
 
 function openURL(url) { window.open(url, '_blank').focus(); }
+

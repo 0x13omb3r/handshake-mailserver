@@ -1,0 +1,3 @@
+#! /bin/sh
+
+exec su service -s /bin/sh -c "exec /usr/local/python/doms_runner.py -S"
