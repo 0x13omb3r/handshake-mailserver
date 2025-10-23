@@ -66,7 +66,7 @@ class Log:
             where = inspect.stack()[1]
         txt = ""
         if where is not None:
-            fname = where.filename.split("/")[-1].split(".")[0]
+            fname = where.filename.split("/")[-1].split(".")[0] # CODE - `basename`, please
             txt = f"[{fname}:{str(where.lineno)}/{where.function}]"
 
         if self.to_syslog:

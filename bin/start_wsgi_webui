@@ -4,7 +4,7 @@
 
 . /usr/local/bin/inc
 
-sessions=$(jq .webui_sessions < ${BASE}/data/service/policy.json)
+sessions=$(jq .webui_sessions < ${BASE}/service/config/policy.json)
 if test -z "${sessions}" -o "${sessions}" = "null"; then sessions="5"; fi
 
 log_lvl="info"

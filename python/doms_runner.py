@@ -28,11 +28,11 @@ def user_has_changed(old_user, this_user):
 
 
 def clean_up_emails(emails):
-    default_mail_domain = policy.get("default_mail_domain").rstrip(".").lower()
+    email_domains = policy.get("email_domains").rstrip(".").lower()
     new_list = []
     for email in [e for e in emails if validation.is_valid_email(e)]:
         user, dom = email.split("@")
-        if dom != default_mail_domain:
+        if dom != email_domains:
             new_list.append([user, dom.rstrip(".").lower()])
     return new_list
 
@@ -84,11 +84,7 @@ class UserData:
         self.need_remake_unix_files = True
 
     def load_users(self):
-        all_user_files = subprocess.run([
-            "/bin/busybox", "find",
-            os.path.join(policy.BASE, "data", "service", "users"), "-type", "f", "-name", "*.json"
-        ],
-                                        capture_output=True)
+        all_user_files = subprocess.run([ "/bin/busybox", "find", self.USER_DIR, "-type", "f", "-name", "*.json" ], capture_output=True)
         self.all_users = {}
         manager_account = policy.get("manager_account")
         for file in all_user_files.stdout.decode('utf-8').strip().split():
@@ -191,11 +187,11 @@ class UserData:
         return True
 
     def remake_mail_files(self, data):
-        default_mail_domain = policy.get("default_mail_domain").rstrip(".").lower()
+        email_domains = policy.get("email_domains").rstrip(".").lower()
 
         pfx = os.path.join(policy.BASE, "postfix", "data", "transport")
         with open(pfx + ".tmp", "w") as fd:
-            fd.write(f"{default_mail_domain} local: $myhostname\n")
+            fd.write(f"{email_domains} local: $myhostname\n")
             for user in self.active_users:
                 doms = self.all_users[user]["domains"]
                 for dom in [d for d in doms if doms[d]]:
@@ -203,15 +199,15 @@ class UserData:
 
         pfx = os.path.join(policy.BASE, "postfix", "data", "virtual")
         with open(pfx + ".tmp", "w") as fd:
-            fd.write(f"manager@{default_mail_domain} manager\n")
-            fd.write(f"root@{default_mail_domain} manager\n")
-            fd.write(f"postmaster@{default_mail_domain} manager\n")
-            fd.write(f"postfix@{default_mail_domain} manager\n")
+            fd.write(f"manager@{email_domains} manager\n")
+            fd.write(f"root@{email_domains} manager\n")
+            fd.write(f"postmaster@{email_domains} manager\n")
+            fd.write(f"postfix@{email_domains} manager\n")
             for user in self.active_users:
                 user_data = self.all_users[user]
                 doms = user_data["domains"]
                 for dom in [d for d in doms if doms[d]]:
-                    fd.write(f"{dom}@{default_mail_domain} {user}\n")
+                    fd.write(f"{dom}@{email_domains} {user}\n")
                 for email in [e for e in user_data["identities"] if validation.is_email_active(user_data, e)]:
                     fd.write(f"{email} {user}\n")
 
@@ -333,10 +329,10 @@ class UserData:
         this_user = self.all_users[user]
         old_user = this_user.copy()
 
-        default_mail_domain = policy.get("default_mail_domain").rstrip(".").lower()
+        email_domains = policy.get("email_domains").rstrip(".").lower()
 
         this_user["identities"] = [user + "@" + dom for user, dom in emails]
-        email_doms = [dom for __, dom in emails if dom != default_mail_domain]
+        email_doms = [dom for __, dom in emails if dom != email_domains]
 
         for dom in list(this_user["domains"]):
             if dom not in email_doms and dom != user:

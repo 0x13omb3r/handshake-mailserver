@@ -41,13 +41,10 @@ RUN chmod 640 /usr/local/etc/uid/*
 RUN chgrp -R service /usr/local/etc/uid
 RUN cp -a /etc/passwd /etc/shadow /etc/group /run
 
-RUN chown -R rainloop: /usr/local/etc/data
-RUN chmod 700 /usr/local/etc/data
-
 RUN ln -fns /run/passwd /etc/passwd
 RUN ln -fns /run/shadow /etc/shadow
 RUN ln -fns /run/group /etc/group
-RUN ln -s /opt/data/data/sasl2 /etc/sasl2
+RUN ln -s /opt/data/service/sasl2 /etc/sasl2
 
 RUN rm -f /var/cache/apk/*
 

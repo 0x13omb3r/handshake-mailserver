@@ -19,9 +19,6 @@ import uconfig
 import misc
 from log import this_log as log
 
-SESSIONS_DIR = os.path.join(policy.BASE, "data", "service", "sessions")
-
-SESSION_EXPIRE_TIME = policy.get("session_expiry")
 
 
 def make_session_code(user):
@@ -50,12 +47,12 @@ def compare_passwords(plaintext, stored):
 
 def create_session_file(user, user_data, user_agent):
     with tempfile.NamedTemporaryFile("w+",
-                                     dir=SESSIONS_DIR,
+                                     dir=policy.SESSIONS_DIR,
                                      encoding="utf-8",
                                      delete=False,
                                      prefix=make_session_code(user)) as fd:
         json.dump({"user": user, "agent": user_agent}, fd)
-        session_code = fd.name.split("/")[-1]
+        session_code = fd.name.split("/")[-1] # CODE - `basename`, please
 
     user_data["session"] = session_code
     user_data["user"] = user
@@ -80,13 +77,14 @@ def login(sent_data, user_agent):
 
 
 def check_session(session_code, user_agent):
-    file = os.path.join(SESSIONS_DIR, session_code)
+    file = os.path.join(policy.SESSIONS_DIR, session_code)
     now = time.time()
 
     if not os.path.isfile(file):
         return False, f"Session file '{file}' missing"
 
-    if os.path.getmtime(file) + SESSION_EXPIRE_TIME <= now:
+    session_expire_time = policy.get("session_expiry")
+    if os.path.getmtime(file) + session_expire_time <= now:
         os.remove(file)
         return False, "Session file too old"
 
@@ -117,7 +115,7 @@ def logout(session_code, user, user_agent):
     if not ok or user_data is None:
         return False, "Session code failed to checkout"
 
-    os.remove(os.path.join(SESSIONS_DIR, session_code))
+    os.remove(os.path.join(policy.SESSIONS_DIR, session_code))
     return True, None
 
 

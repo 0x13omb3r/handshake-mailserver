@@ -49,7 +49,7 @@ def check_mx_match(user, mx_rrs):
     if mx.get("type", 0) != 15 or mx.get("data", None) is None:
         return False
     mx_rr = mx["data"].rstrip(".").lower().split()[1]
-    chk_rr = (user["mx"] + "." + policy.get("default_mail_domain")).rstrip(".").lower()
+    chk_rr = (user["mx"] + "." + policy.get("email_domains")).rstrip(".").lower()
     return chk_rr == mx_rr
 
 

@@ -9,45 +9,42 @@ import sys
 import fileloader
 
 DEFAULT_POLICY_VALUES = {
-    "default_mail_domain": "webmail.localhost",
+    "email_domain": "webmail.localhost",
     "website_domain": "example.com",
     "website_title": "Handshake Webmail",
+    "logging_default": "local0",
+    "strict_referrer": True,
+    "allow_icann_domains": False,
+    "session_expiry": 60 * 60 * 2,
+    "never_active_account_expire": 7,
+    "was_active_account_expire": 30,
+    "manager_account": "manager",
     "site_fqdn": "handshake.webmail",
     "site_country": "GB",
     "site_location": "London",
     "site_org": "Handshake",
     "site_org_unit": "Ops",
-    "site_state": "London",
-    "logging_default": "local0",
-    "strict_referrer": True,
-    "allow_icann_domains": False,
-    "allowable_referrer": None,
-    "session_expiry": 60 * 60 * 2,
-    "never_active_account_expire": 7,
-    "was_active_account_expire": 30,
-    "manager_account": "manager"
+    "site_state": "London"
 }
 
-BASE = os.environ.get("BASE", "/opt/data")
-POLICY_FILE = os.path.join(BASE, "data", "service", "policy.json")
-DOMAINS_FILE = os.path.join(BASE, "data", "service", "used_domains.json")
 
 
 class Policy:
     """ policy values manager """
     def __init__(self):
-        self.BASE = BASE
-        self.POLICY_FILE = POLICY_FILE
-        self.DOMAINS_FILE = DOMAINS_FILE
-        self.USER_DIR = os.path.join(BASE, "data", "service", "users")
-        self.HOME_DIR = os.path.join(BASE, "data", "homedirs")
-        self.MBOX_DIR = os.path.join(BASE, "data", "mailboxes")
+        self.BASE = os.environ.get("BASE", "/opt/data")
+        self.POLICY_FILE = os.path.join(self.BASE, "service", "config", "policy.json")
+        self.DOMAINS_FILE = os.path.join(self.BASE, "service", "config", "used_domains.json")
+        self.USER_DIR = os.path.join(self.BASE, "service", "users")
+        self.HOME_DIR = os.path.join(self.BASE, "service", "homedirs")
+        self.MBOX_DIR = os.path.join(self.BASE, "service", "mailboxes")
+        self.SESSIONS_DIR = os.path.join(self.BASE, "service", "sessions")
 
-        if not os.path.isfile(POLICY_FILE):
-            with open(POLICY_FILE, "w+") as fd:
+        if not os.path.isfile(self.POLICY_FILE):
+            with open(self.POLICY_FILE, "w+") as fd:
                 json.dump(DEFAULT_POLICY_VALUES, fd, indent=2)
 
-        self.file = fileloader.FileLoader(POLICY_FILE)
+        self.file = fileloader.FileLoader(self.POLICY_FILE)
         self.all_data = None
         self.merge_policy_data()
 

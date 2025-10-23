@@ -4,54 +4,30 @@ echo "=================== [$(date)] INITALIZING ==================="
 
 . /usr/local/bin/inc
 
-mkdir -p ${BASE}/pems \
-	${BASE}/data/sasl2 ${BASE}/data/homedirs ${BASE}/data/mailboxes \
-	${BASE}/postfix/data/ ${BASE}/postfix/spool/
-chmod 755 ${BASE}/data/homedirs ${BASE}/data/mailboxes
-chown 0:0 ${BASE}/data/homedirs ${BASE}/data/mailboxes
+cp -a ${SRC}/uid/* /run/${file}
 
-for file in group passwd shadow
-do
-	cp -a ${SRC}/uid/${file} /run/${file}
-done
-
-if ! test -d ${BASE}/data/service
+if ! test -d ${BASE}/service -a ${BASE}/postfix -a ${BASE}/pems
 	then
-		cp -a /usr/local/etc/service ${BASE}/data/
-	fi
-if ! test -f ${BASE}/data/service/used_domains.json
-	then
-		echo "{}" > ${BASE}/data/service/used_domains.json
+		cp -a /usr/local/etc/default_config/* ${BASE}/.
 	fi
 
 /usr/local/python/doms_runner.py -O remake_unix_files
 /usr/local/python/root_runner.py -O install_system_files
 
-mkdir -p /run/exec/root /run/exec/doms ${BASE}/data/service/sessions
-chmod 777 /run/exec/root /run/exec/doms ${BASE}/data/service/sessions
-chown service: /run/exec/doms
+mkdir -p /run/exec/root /run/exec/doms
+chmod 770 /run/exec/root /run/exec/doms
+chgrp service: /run/exec/doms /run/exec/root
 
 ${PYBASE}/merge_templates.py
 . /run/templates/__include__
 /usr/local/python/doms_runner.py -O remake_mail_files
 /usr/local/python/root_runner.py -O install_system_files
 
-chown -R service: ${BASE}/data/service/.
-
-if ! test -d ${BASE}/data/homedirs/${POLICY_MANAGER_ACCOUNT}
-	then
-		mkdir -p ${BASE}/data/homedirs/${POLICY_MANAGER_ACCOUNT}
-		chown 900: ${BASE}/data/homedirs/${POLICY_MANAGER_ACCOUNT}
-	fi
-
-if ! grep -q '^manager:' /etc/passwd
-	then
-		/usr/local/bin/user_create "manager" "12345" >/dev/null 2>&1
-	fi
-
 mkdir -p /run/pems
 chmod 755 /run/pems
 chown root:mail /run/pems
+
+mkdir /run/nginx; chown nginx: /run/nginx
 
 if ! test -s ${BASE}/pems/server.pem
 	then
@@ -66,28 +42,8 @@ if ! test -s ${BASE}/pems/server.pem
 cp -a ${BASE}/pems/server.pem /run/pems/server.pem
 chmod 644 /run/pems/server.pem
 
-if ! test -f /etc/sasl2/smtpd.conf
-	then
-		{
-		echo "pwcheck_method: auxprop"
-		echo "auxprop_plugin: sasldb"
-		echo "mech_list: PLAIN LOGIN CRAM-MD5 DIGEST-MD5 NTLM"
-		} > /etc/sasl2/smtpd.conf
-	fi
-
 postfix set-permissions >/dev/null 2>&1
 
-chown -R postfix: ${BASE}/postfix/data
-chmod 775 ${BASE}/postfix/data
-for file in transport virtual
-do
-	pfx="${BASE}/postfix/data/${file}"
-	touch ${pfx}
-	rm -f ${pfx}.lmdb
-	postmap ${BASE}/postfix/data/${file}
-done
-
-mkdir /run/nginx; chown nginx: /run/nginx
 
 mkdir -p ${BASE}/data/rainloop
 if ! test -f ${BASE}/data/rainloop/EMPTY
@@ -95,7 +51,7 @@ if ! test -f ${BASE}/data/rainloop/EMPTY
 		cp -a ${SRC}/data/. ${BASE}/data/rainloop/
 	fi
 
-RAINLOOP="${BASE}/data/rainloop/_data_/_default_"
+RAINLOOP="${BASE}/service/rainloop/_data_/_default_"
 dst="${RAINLOOP}/configs/application.ini"
 src="/run/templates/application.ini"
 tag="${RAINLOOP}/configs/.made_by_auto"
@@ -103,14 +59,17 @@ if ! test -f ${dst} -a -f ${tag} || ! test ${dst} -nt ${tag}
 	then
 		cp -a ${src} ${dst}
 		touch -r ${dst} ${tag}
+		chown rainloop: ${dst} ${tag}
 	fi
 
 dst="${RAINLOOP}/domains/${POLICY_DEFAULT_MAIL_DOMAIN}.ini"
 src="/run/templates/webmail.localhost.ini"
-if ! test -f ${dst}; then rm -f ${RAINLOOP}/domains/*; cp -a ${src} ${dst}; fi
-
-chmod 700 ${BASE}/data/rainloop
-chown -R rainloop: ${BASE}/data/rainloop
+if ! test -f ${dst}
+	then
+		rm -f ${RAINLOOP}/domains/*
+		cp -a ${src} ${dst}
+		chown rainloop: ${dst}
+	fi
 
 echo "=================== [$(date)] STARTING ==================="
 
