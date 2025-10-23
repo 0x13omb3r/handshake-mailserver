@@ -29,19 +29,25 @@ REMOVE_TO_SECURE = {
 
 class WebuiReq:
     """ data unique to each request to keep different users data separate """
+
     def __init__(self):
         self.sess_code = None
         self.user = None
         self.user_data = {}
         self.post_js = flask.request.json if flask.request.method == "POST" and flask.request.is_json else None
-        self.headers = {item.lower(): val for item, val in dict(flask.request.headers).items()}
+        self.headers = {
+            item.lower(): val
+            for item, val in dict(flask.request.headers).items()
+        }
         self.user_agent = self.headers.get("user-agent", "Unknown")
 
         if SESSION_TAG_LOWER in self.headers:
-            logged_in, check_sess_data = users.check_session(self.headers[SESSION_TAG_LOWER], self.user_agent)
+            logged_in, check_sess_data = users.check_session(
+                self.headers[SESSION_TAG_LOWER], self.user_agent)
             self.parse_user_data(logged_in, check_sess_data)
 
-        self.is_logged_in = (self.user is not None and self.sess_code is not None)
+        self.is_logged_in = (self.user is not None
+                             and self.sess_code is not None)
 
     def parse_user_data(self, logged_in, check_sess_data):
         """ set up session properties """
@@ -97,13 +103,16 @@ def before_request():
         return None
 
     allowable_referrer = policy.get("allowable_referrer")
-    if allowable_referrer is not None and isinstance(allowable_referrer, (dict, list)):
+    if allowable_referrer is not None and isinstance(allowable_referrer,
+                                                     (dict, list)):
         if flask.request.referrer in allowable_referrer:
             return None
-    elif flask.request.referrer == "https://" + policy.get("website_domain") + "/":
+    elif flask.request.referrer == "https://" + policy.get(
+            "website_domain") + "/":
         return None
 
-    return flask.make_response(flask.jsonify({"error": "Website continuity error"}), HTML_CODE_ERR)
+    return flask.make_response(
+        flask.jsonify({"error": "Website continuity error"}), HTML_CODE_ERR)
 
 
 @application.route('/wmapi/hello', methods=['GET'])
@@ -219,16 +228,18 @@ def users_close():
 def password_request():
     req = WebuiReq()
     log.log(f"password/request: {req.post_js}")
-    if users.password_request(req.user, req.post_js):
-    	return req.response("OK")
+    if users.request_password_reset(req.user, req.post_js):
+        return req.response("OK")
     return req.abort("Coming Soon")
 
 
 @application.route('/wmapi/password/reset', methods=['POST'])
 def password_reset():
     req = WebuiReq()
-    # CODE - actually reset password
-    return req.abort("Coming Soon")
+    ok, reply = users.reset_user_password(req.post_js)
+    if not ok:
+        return req.abort(reply)
+    return req.response("OK")
 
 
 def main():

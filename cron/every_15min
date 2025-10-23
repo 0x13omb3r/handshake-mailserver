@@ -1,6 +1,6 @@
 #! /bin/sh
 
-this_base="${BASE:-/opt/data}"
+. /usr/local/bin/inc
 
-find ${this_base}/data/service/sessions -mmin +360 -type f -delete
+find ${BASE}/service/sessions -mmin +360 -type f -delete
 /usr/local/python/executor.py -t doms -v run_mx_check

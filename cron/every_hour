@@ -1,6 +1,6 @@
 #! /bin/sh
 
-this_base="${BASE:-/opt/data}"
+. /usr/local/bin/inc
 
 svr_pem="${this_base}/pems/server.pem"
 svr_dst="run/pems/server.pem"

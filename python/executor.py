@@ -13,7 +13,11 @@ def create_command(pfx, cmd_type, cmd_data):
     dir = "/run/exec/" + cmd_type
     if not os.path.isdir(dir):
         return False
-    with tempfile.NamedTemporaryFile("w+", dir=dir, encoding="utf-8", delete=False, prefix=pfx + "_") as fd:
+    with tempfile.NamedTemporaryFile("w+",
+                                     dir=dir,
+                                     encoding="utf-8",
+                                     delete=False,
+                                     prefix=pfx + "_") as fd:
         json.dump(cmd_data, fd)
         filename = fd.name
     fd.close()
@@ -27,7 +31,10 @@ def find_oldest_cmd(cmd_type):
         return False
 
     files = glob.glob(os.path.join(dir, '*'))
-    files = [f for f in files if os.path.isfile(f) and oct(os.stat(f).st_mode)[-3:] == "444"]
+    files = [
+        f for f in files
+        if os.path.isfile(f) and oct(os.stat(f).st_mode)[-3:] == "444"
+    ]
 
     if not files:
         return None
@@ -36,7 +43,13 @@ def find_oldest_cmd(cmd_type):
 
 
 def run_tests():
-    print(create_command("test", "root", {"verb": "test", "data": {"value": "this is a test"}}))
+    print(
+        create_command("test", "root", {
+            "verb": "test",
+            "data": {
+                "value": "this is a test"
+            }
+        }))
     print("root ->", find_oldest_cmd("root"))
     print("doms ->", find_oldest_cmd("doms"))
     print(oct(os.stat(find_oldest_cmd("root")).st_mode))

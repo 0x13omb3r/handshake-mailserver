@@ -19,7 +19,7 @@ now go to Settings -> Accounts and click "Add an Identity"
 All domains you activate will authmaitcally get the default email address <b>[domain-name]@{{ policy.email_domain }}</b>,
 e.g. {{ user.user }}@{{ policy.email_domain }}
 <P>
-If you have any problems or questions, just reply to this email.
+If you have any problem or questions, just reply to this email.
 <P>
 &nbsp;&nbsp;&nbsp;{{ policy.manager_account }}
 &nbsp;&nbsp;&nbsp;{{ policy.manager_account }}@{{ policy.email_domain }}

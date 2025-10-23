@@ -42,21 +42,26 @@ def is_valid_email(email):
 
 
 def check_mx_match(user, mx_rrs):
-    if ((mx_rrs is None) or (mx_rrs.get("Status", 99) != 0) or ("Answer" not in mx_rrs)
-            or (not isinstance(mx_rrs["Answer"], list)) or (len(mx_rrs["Answer"]) != 1)):
+    if ((mx_rrs is None) or (mx_rrs.get("Status", 99) != 0)
+            or ("Answer" not in mx_rrs)
+            or (not isinstance(mx_rrs["Answer"], list))
+            or (len(mx_rrs["Answer"]) != 1)):
         return False
     mx = mx_rrs["Answer"][0]
     if mx.get("type", 0) != 15 or mx.get("data", None) is None:
         return False
     mx_rr = mx["data"].rstrip(".").lower().split()[1]
-    chk_rr = (user["mx"] + "." + policy.get("email_domains")).rstrip(".").lower()
+    chk_rr = (user["mx"] + "." +
+              policy.get("email_domain")).rstrip(".").lower()
     return chk_rr == mx_rr
 
 
 def is_user_active(user_data):
     if (user := user_data.get("user", None)) is None:
         return False
-    if (doms := user_data.get("domains", None)) is None or not isinstance(doms, dict) or user not in doms:
+    if (doms := user_data.get(
+            "domains",
+            None)) is None or not isinstance(doms, dict) or user not in doms:
         return False
     return doms[user]
 
@@ -212,20 +217,25 @@ def not_now():
     x = {"user": sys.argv[1]}
     print("OK NEW:", web_validate(x, {"user": [True, web_valid_new_account]}))
     print("OK REG:", web_validate(x, {"user": [True, web_valid_reg_account]}))
-    print("OK HOST:", web_validate({"host": "xxx.yyy"}, {"host": [True, is_valid_fqdn]}))
-    print("OK HOST:", web_validate({"host": "1 2"}, {"host": [True, is_valid_fqdn]}))
+    print("OK HOST:",
+          web_validate({"host": "xxx.yyy"}, {"host": [True, is_valid_fqdn]}))
+    print("OK HOST:",
+          web_validate({"host": "1 2"}, {"host": [True, is_valid_fqdn]}))
     print(x)
 
-    for host in ["A_A", "A_A.xxxx.cccc", "www.gstatic.com.", "m.files.bbci.co.uk."]:
+    for host in [
+            "A_A", "A_A.xxxx.cccc", "www.gstatic.com.", "m.files.bbci.co.uk."
+    ]:
         print("is_valid_host", host, is_valid_host(host))
         print("is_valid_fqdn", host, is_valid_fqdn(host))
     print(
-        web_validate({
-            "idn": "xn--fred",
-            "host": "www.gstatic.com",
-            "junk": "some junk"
-        }, {
-            "idn": [True, has_idn],
-            "idn2": [False, has_idn],
-            "host": [True, is_valid_fqdn]
-        }))
+        web_validate(
+            {
+                "idn": "xn--fred",
+                "host": "www.gstatic.com",
+                "junk": "some junk"
+            }, {
+                "idn": [True, has_idn],
+                "idn2": [False, has_idn],
+                "host": [True, is_valid_fqdn]
+            }))

@@ -1,3 +1,5 @@
 #! /bin/sh
 
+. /usr/local/bin/inc
 /usr/local/python/executor.py -t doms -v user_age_check
+find ${BASE}/service/reset_codes -mtime +7 -type f -delete

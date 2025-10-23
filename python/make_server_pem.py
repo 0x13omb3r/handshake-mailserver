@@ -17,7 +17,11 @@ REQUIRED_FILES = ["host.crt", "my_ca.pem", "host.key", "my_ca.key"]
 
 def make_cmds(tmpdir):
     host_conf = os.path.join(tmpdir, "host.conf")
-    make_ca_priv = ["openssl", "genrsa", "-out", os.path.join(tmpdir, "my_ca.key"), str(CA_BITS)]
+    make_ca_priv = [
+        "openssl", "genrsa", "-out",
+        os.path.join(tmpdir, "my_ca.key"),
+        str(CA_BITS)
+    ]
     make_ca_pub = [
         "openssl", "req", "-x509", "-new", "-nodes", "-key",
         os.path.join(tmpdir, "my_ca.key"), "-sha256", "-days",
@@ -25,11 +29,16 @@ def make_cmds(tmpdir):
         os.path.join(tmpdir, "my_ca.pem"), "-config", host_conf
     ]
 
-    make_host_key = ["openssl", "genrsa", "-out", os.path.join(tmpdir, "host.key"), str(KEY_BITS)]
+    make_host_key = [
+        "openssl", "genrsa", "-out",
+        os.path.join(tmpdir, "host.key"),
+        str(KEY_BITS)
+    ]
 
     make_host_csr = [
         "openssl", "req", "-new", "-key",
-        os.path.join(tmpdir, "host.key"), "-sha256", "-nodes", "-config", host_conf, "-out",
+        os.path.join(tmpdir, "host.key"), "-sha256", "-nodes", "-config",
+        host_conf, "-out",
         os.path.join(tmpdir, "host.csr"), "-extensions", "v3_req"
     ]
 
@@ -43,37 +52,53 @@ def make_cmds(tmpdir):
         os.path.join(tmpdir, "host.v3")
     ]
 
-    return [make_ca_priv, make_ca_pub, make_host_key, make_host_csr, sign_host_key]
+    return [
+        make_ca_priv, make_ca_pub, make_host_key, make_host_csr, sign_host_key
+    ]
 
 
-def make_pem(fqdn, location, organization, organizational_unit, state, country):
+def make_pem(fqdn, location, organization, organizational_unit, state,
+             country):
     with tempfile.TemporaryDirectory() as tmpdir:
 
-        lines = ["[ v3_req ]", "subjectAltName = @alt_names", "", "[alt_names]", f"DNS.1 = {fqdn}"]
+        lines = [
+            "[ v3_req ]", "subjectAltName = @alt_names", "", "[alt_names]",
+            f"DNS.1 = {fqdn}"
+        ]
 
-        with open(os.path.join(tmpdir, "host.v3"), "w", encoding="utf-8") as fd:
+        with open(os.path.join(tmpdir, "host.v3"), "w",
+                  encoding="utf-8") as fd:
             fd.write("\n".join(lines))
 
         lines = [
-            "[req]", "req_extensions = v3_req", "distinguished_name = req_distinguished_name", "prompt = no", "",
-            "[req_distinguished_name]", f"C = {country}", f"ST = {state}", f"L = {location}", f"O = {organization}",
-            f"OU = {organizational_unit}", f"CN = {fqdn}", "", "[ v3_req ]", "", "basicConstraints = CA:FALSE",
-            "keyUsage = nonRepudiation, digitalSignature, keyEncipherment", "subjectAltName = @alt_names", "",
-            "[alt_names]", f"DNS.1 = {fqdn}"
+            "[req]", "req_extensions = v3_req",
+            "distinguished_name = req_distinguished_name", "prompt = no", "",
+            "[req_distinguished_name]", f"C = {country}", f"ST = {state}",
+            f"L = {location}", f"O = {organization}",
+            f"OU = {organizational_unit}", f"CN = {fqdn}", "", "[ v3_req ]",
+            "", "basicConstraints = CA:FALSE",
+            "keyUsage = nonRepudiation, digitalSignature, keyEncipherment",
+            "subjectAltName = @alt_names", "", "[alt_names]", f"DNS.1 = {fqdn}"
         ]
 
-        with open(os.path.join(tmpdir, "host.conf"), "w", encoding="utf-8") as fd:
+        with open(os.path.join(tmpdir, "host.conf"), "w",
+                  encoding="utf-8") as fd:
             fd.write("\n".join(lines))
 
         for cmd in make_cmds(tmpdir):
             try:
-                subprocess.run(cmd, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, check=True)
+                subprocess.run(cmd,
+                               stderr=subprocess.DEVNULL,
+                               stdout=subprocess.DEVNULL,
+                               check=True)
             except subprocess.CalledProcessError:
                 return False, None
 
         for file in REQUIRED_FILES:
             if not os.path.isfile(os.path.join(tmpdir, file)):
-                print(f"ERROR: File '{os.path.join(tmpdir,file)}' did not get created")
+                print(
+                    f"ERROR: File '{os.path.join(tmpdir,file)}' did not get created"
+                )
                 return False, None
 
         pem = []
@@ -94,6 +119,6 @@ if __name__ == "__main__":
     parser.add_argument("-s", '--state', required=True)
     args = parser.parse_args()
 
-    ok, reply = make_pem(args.fqdn, args.location, args.organization, args.organizational_unit, args.state,
-                         args.country)
+    ok, reply = make_pem(args.fqdn, args.location, args.organization,
+                         args.organizational_unit, args.state, args.country)
     print("\n".join(reply))

@@ -9,9 +9,6 @@ import json
 import misc
 from policy import this_policy as policy
 
-CFG_DIR = os.path.join(policy.BASE, "data", "service")
-LCK_DIR = "/run/"
-
 
 def calc_hash(user):
     if user == policy.get("manager_account"):
@@ -28,12 +25,12 @@ def calc_hash(user):
 def user_file_name(user, with_make_dir=False, with_lock_name=False):
     this_hash = calc_hash(user)
     if with_make_dir:
-        d = CFG_DIR
+        d = policy.USER_DIR
         for dir in ["users", this_hash[0], this_hash[1]]:
             d = os.path.join(d, dir)
             if not os.path.isdir(d):
                 os.mkdir(d, mode=0o755)
-    path = os.path.join(CFG_DIR, "users", this_hash[0], this_hash[1])
+    path = os.path.join(policy.USER_DIR, this_hash[0], this_hash[1])
     if with_lock_name:
         return os.path.join(path, user + ".json"), os.path.join(path, ".lock")
     else:
@@ -79,7 +76,10 @@ def user_info_update(user, data):
                     if item in js:
                         del js[item]
                 else:
-                    js[item] = data[item]
+                    if item == "events" and isinstance(data[item], dict):
+                        js[item].append(data[item])
+                    else:
+                        js[item] = data[item]
 
         js["amended_dt"] = misc.now()
         new_file = user_file + ".new"
@@ -93,8 +93,10 @@ def user_info_update(user, data):
 
 if __name__ == "__main__":
     print("INFO LOAD ->", user_info_load("users", "anon.webmail"))
-    print("INFO ADD ->", user_info_update("users", "anon.webmail", {"temp": "value"}))
+    print("INFO ADD ->",
+          user_info_update("users", "anon.webmail", {"temp": "value"}))
     print("INFO LOAD ->", user_info_load("users", "anon.webmail"))
-    print("INFO ADD ->", user_info_update("users", "anon.webmail", {"temp": None}))
+    print("INFO ADD ->",
+          user_info_update("users", "anon.webmail", {"temp": None}))
     print("INFO LOAD ->", user_info_load("users", "anon.webmail"))
     print("INFO LOAD ->", user_info_load("users", "anon.webmail"))

@@ -63,7 +63,9 @@ def install_system_files(data):
         if os.path.isfile(new):
             os.chown(new, POSTFIX_UNIX_ID, POSTFIX_UNIX_ID)
             os.replace(new, pfx)
-            subprocess.run(["/usr/sbin/postmap", pfx], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            subprocess.run(["/usr/sbin/postmap", pfx],
+                           stderr=subprocess.DEVNULL,
+                           stdout=subprocess.DEVNULL)
             os.chown(pfx + ".lmdb", POSTFIX_UNIX_ID, POSTFIX_UNIX_ID)
 
     for file in ["passwd", "shadow", "group"]:
@@ -74,8 +76,10 @@ def install_system_files(data):
             os.chown(src, uid, gid)
             os.replace(src, f"/run/{file}")
 
-    if data is not None and isinstance(data, dict) and (callback := data.get("with_doms_callback", None)) is not None:
-        executor.create_command("install_system_files", "doms", {"verb": callback})
+    if data is not None and isinstance(data, dict) and (callback := data.get(
+            "with_doms_callback", None)) is not None:
+        executor.create_command("install_system_files", "doms",
+                                {"verb": callback})
 
     return True
 
@@ -122,13 +126,23 @@ def run_tests():
 
 def main():
     parser = argparse.ArgumentParser(description='ROOT Jobs Runner')
-    parser.add_argument("-S", "--syslog", default=False, help="Log to syslog", action="store_true")
-    parser.add_argument("-T", "--test", default=False, help="Run tests", action="store_true")
+    parser.add_argument("-S",
+                        "--syslog",
+                        default=False,
+                        help="Log to syslog",
+                        action="store_true")
+    parser.add_argument("-T",
+                        "--test",
+                        default=False,
+                        help="Run tests",
+                        action="store_true")
     parser.add_argument("-O", "--one", help="Run one module")
     parser.add_argument("-d", "--data", help="data for running one")
     args = parser.parse_args()
     if args.one:
-        log.init("ROOT run one", with_debug=misc.debug_mode(), to_syslog=args.syslog)
+        log.init("ROOT run one",
+                 with_debug=misc.debug_mode(),
+                 to_syslog=args.syslog)
         if args.one not in ROOT_CMDS:
             log.log("ERROR: ROOT CMD '{args.one}' not valid")
             return

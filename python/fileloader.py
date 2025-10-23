@@ -21,7 +21,8 @@ def load_file_json(filename):
                 data = json.load(file_fd)
                 return data
     except (ValueError, IOError) as err:
-        syslog.syslog(syslog.LOG_ERR, f"{txt} -> load_file_json: {filename} : {str(err)}")
+        syslog.syslog(syslog.LOG_ERR,
+                      f"{txt} -> load_file_json: {filename} : {str(err)}")
 
     return None
 
@@ -42,6 +43,7 @@ def have_newer(mtime, file_name):
 
 class FileLoader:
     """ load & update a json file """
+
     def __init__(self, filename):
         self.filename = filename
         self.last_mtime = 0

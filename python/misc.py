@@ -4,6 +4,10 @@
 
 import datetime
 import idna
+import hashlib
+import secrets
+import base64
+import time
 import os
 
 
@@ -43,7 +47,39 @@ def debug_mode():
     return os.environ.get("DEBUG_MODE", "N") == "Y"
 
 
+def as_simple_text(data):
+    return base64.b64encode(data).decode("utf-8").translate(
+        str.maketrans({
+            "/": "-",
+            "=": "",
+            "+": "_"
+        }))
+
+
+def make_hash(src):
+    hsh = hashlib.sha256()
+    hsh.update(src.encode("utf-8"))
+    return as_simple_text(hsh.digest())
+
+
+def make_session_code(user):
+    """ make a user's session code - sent to the user """
+    hsh = hashlib.sha256()
+    hsh.update(secrets.token_bytes(500))
+    hsh.update(str(user).encode("utf-8"))
+    hsh.update(str(os.getpid()).encode("utf-8"))
+    hsh.update(str(time.time()).encode("utf-8"))
+    return as_simple_text(hsh.digest())
+
+
 if __name__ == "__main__":
+    x = make_session_code("james")
+    print(x)
+    print(make_hash(x + ":" + "1234"))
+    print(make_hash(x + ":" + "1234"))
+
+
+def not_this_time():
     for x in ["xn--belgi-rsa.be", "xn--9q8h.ss-test-1", "fred.com"]:
         utf8 = puny_to_utf8(x)
         print(x, "->", utf8)

@@ -10,6 +10,7 @@ import inspect
 import datetime
 
 from policy import this_policy as policy
+import misc
 
 facility_options = {
     "kern": syslog.LOG_KERN,
@@ -51,6 +52,7 @@ severity_options = {
 
 
 class Log:
+
     def __init__(self):
         self.done_init = False
         self.with_debug = False
@@ -66,7 +68,8 @@ class Log:
             where = inspect.stack()[1]
         txt = ""
         if where is not None:
-            fname = where.filename.split("/")[-1].split(".")[0] # CODE - `basename`, please
+            fname = os.path.basename(where.filename).split(".")[
+                0]  # CODE - check if `basename` can remove suffix
             txt = f"[{fname}:{str(where.lineno)}/{where.function}]"
 
         if self.to_syslog:
@@ -81,7 +84,8 @@ class Log:
             print(f"{now_txt} SYSLOG{txt} {line}")
 
     def check_off(self, this_facility, also_check_none=False):
-        if this_facility in ["None", "Off"] or (also_check_none and this_facility is None):
+        if this_facility in ["None", "Off"] or (also_check_none
+                                                and this_facility is None):
             self.to_syslog = False
             self.done_init = True
             return True
@@ -106,7 +110,7 @@ class Log:
         syslog.openlog(logoption=syslog.LOG_PID, facility=this_facility)
         self.to_syslog = to_syslog
         self.with_debug = with_debug
-        if os.environ.get("DEBUG_MODE", "N") == "Y":
+        if misc.debug_mode():
             self.with_debug = True
         self.done_init = True
 

@@ -7,7 +7,6 @@ import time
 import os
 import json
 import passlib.hash
-import hashlib
 import secrets
 import base64
 import validators
@@ -20,22 +19,6 @@ import misc
 from log import this_log as log
 
 
-
-def make_session_code(user):
-    """ make a user's session code - sent to the user """
-    hsh = hashlib.sha256()
-    hsh.update(secrets.token_bytes(500))
-    hsh.update(str(user).encode("utf-8"))
-    hsh.update(str(os.getpid()).encode("utf-8"))
-    hsh.update(str(time.time()).encode("utf-8"))
-    return base64.b64encode(hsh.digest()).decode("utf-8").translate(
-        str.maketrans({
-            "/": "-",
-            "=": "",
-            "+": "_"
-        }))
-
-
 def encrypt(password, salt=None):
     return passlib.hash.sha512_crypt.hash(password, rounds=5000, salt=salt)
 
@@ -46,13 +29,14 @@ def compare_passwords(plaintext, stored):
 
 
 def create_session_file(user, user_data, user_agent):
-    with tempfile.NamedTemporaryFile("w+",
-                                     dir=policy.SESSIONS_DIR,
-                                     encoding="utf-8",
-                                     delete=False,
-                                     prefix=make_session_code(user)) as fd:
+    with tempfile.NamedTemporaryFile(
+            "w+",
+            dir=policy.SESSIONS_DIR,
+            encoding="utf-8",
+            delete=False,
+            prefix=misc.make_session_code(user)) as fd:
         json.dump({"user": user, "agent": user_agent}, fd)
-        session_code = fd.name.split("/")[-1] # CODE - `basename`, please
+        session_code = os.path.basename(fd.name)
 
     user_data["session"] = session_code
     user_data["user"] = user
@@ -131,7 +115,7 @@ PASSWORD_REQUEST_WEB = {
 }
 
 
-def password_request(user, sent_data):
+def request_password_reset(user, sent_data):
     log.log(f"{user}: {sent_data}")
     ok, reply = validation.web_validate(sent_data, PASSWORD_REQUEST_WEB)
     if not ok:
@@ -139,7 +123,7 @@ def password_request(user, sent_data):
 
     executor.create_command(
         "webui_password_request", "doms", {
-            "verb": "password_request",
+            "verb": "request_password_reset",
             "data": {
                 "email": sent_data["email"],
                 "pin": sent_data["pin"]
@@ -221,6 +205,49 @@ def password_new(user, password):
     return True
 
 
+def valid_reset_code(code):
+    if len(code) != 43:
+        return False, "Invalid reset code"
+    return True, None
+
+
+PASSWORD_RESET_WEB = {
+    "code": [True, valid_reset_code],
+    "pin": [True, valid_reset_pin],
+    "password": [True, None]
+}
+
+
+def reset_user_password(sent_data):
+    ok, reply = validation.web_validate(sent_data, PASSWORD_RESET_WEB)
+    if not ok:
+        return False, reply
+
+    store_code = misc.make_hash(sent_data["code"] + ":" + sent_data["pin"])
+    file = os.path.join(policy.RESET_CODES, store_code)
+    if not os.path.isfile(file):
+        return False, "Invalid reset code"
+    try:
+        with open(file, "r") as fd:
+            this_user = json.load(fd)
+    except Exception:
+        os.remove(file)
+        return False, "Invalid reset code"
+    os.remove(file)
+
+    if (user := this_user.get("user", None)) is None:
+        return False, "Invalid reset code"
+
+    ok, user_data = uconfig.user_info_load(user)
+    if not ok:
+        return False, "Invalid reset code"
+
+    uconfig.user_info_update(user,
+                             {"password": encrypt(sent_data["password"])})
+
+    return True, None
+
+
 if __name__ == "__main__":
     print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
 
@@ -256,4 +283,4 @@ def debug_stuff():
     print("INFO ADD ->",
           uconfig.user_info_update("lord.webmail", {"temp": None}))
     print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
-    # print(make_session_code("james"))
+    # print(misc.make_session_code("james"))

@@ -18,7 +18,8 @@ def main():
 
     merge_data = {"policy": policy.data()}
 
-    environment = jinja2.Environment(loader=jinja2.FileSystemLoader(SRC_DIR), autoescape=True)
+    environment = jinja2.Environment(loader=jinja2.FileSystemLoader(SRC_DIR),
+                                     autoescape=True)
     for file in os.listdir(SRC_DIR):
         if os.path.isfile(os.path.join(SRC_DIR, file)):
             dst_path = os.path.join(DST_DIR, file)
@@ -29,7 +30,9 @@ def main():
 
     with open(DST_DIR + "/__include__", "w+") as fd:
         for item in merge_data["policy"]:
-            fd.write(f"export POLICY_{item.upper()}='{merge_data['policy'][item]}'\n")
+            fd.write(
+                f"export POLICY_{item.upper()}='{merge_data['policy'][item]}'\n"
+            )
 
 
 def run_tests():
@@ -38,7 +41,11 @@ def run_tests():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='ROOT Jobs Runner')
-    parser.add_argument("-T", "--test", default=False, help="Run tests", action="store_true")
+    parser.add_argument("-T",
+                        "--test",
+                        default=False,
+                        help="Run tests",
+                        action="store_true")
     args = parser.parse_args()
     if args.test:
         run_tests()

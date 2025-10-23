@@ -458,7 +458,7 @@ function go_welcome(with_push)
 
 function router_reset_password(params)
 {
-	if (params[0].length!=30) {
+	if (params[0].length!=43) {
 		elm.userSpace.innerHTML = "Invalid reset code";
 		show_one_space("userSpace");
 		return;

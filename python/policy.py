@@ -28,17 +28,21 @@ DEFAULT_POLICY_VALUES = {
 }
 
 
-
 class Policy:
     """ policy values manager """
+
     def __init__(self):
         self.BASE = os.environ.get("BASE", "/opt/data")
-        self.POLICY_FILE = os.path.join(self.BASE, "service", "config", "policy.json")
-        self.DOMAINS_FILE = os.path.join(self.BASE, "service", "config", "used_domains.json")
-        self.USER_DIR = os.path.join(self.BASE, "service", "users")
-        self.HOME_DIR = os.path.join(self.BASE, "service", "homedirs")
-        self.MBOX_DIR = os.path.join(self.BASE, "service", "mailboxes")
-        self.SESSIONS_DIR = os.path.join(self.BASE, "service", "sessions")
+        self.SERVICE = os.path.join(self.BASE, "service")
+        self.POLICY_FILE = os.path.join(self.SERVICE, "config", "policy.json")
+        self.DOMAINS_FILE = os.path.join(self.SERVICE, "config",
+                                         "used_domains.json")
+        self.USER_DIR = os.path.join(self.SERVICE, "users")
+        self.HOME_DIR = os.path.join(self.SERVICE, "homedirs")
+        self.MBOX_DIR = os.path.join(self.SERVICE, "mailboxes")
+        self.EMAILS_DIR = os.path.join(self.SERVICE, "emails")
+        self.SESSIONS_DIR = os.path.join(self.SERVICE, "sessions")
+        self.RESET_CODES = os.path.join(self.SERVICE, "reset_codes")
 
         if not os.path.isfile(self.POLICY_FILE):
             with open(self.POLICY_FILE, "w+") as fd:
