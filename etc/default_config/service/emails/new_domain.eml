@@ -1,23 +1,10 @@
 To: {{ user.user }}@{{ policy.email_domain }}
 From: {{ policy.manager_account }}@{{ policy.email_domain }}
-Subject: Welcome to {{ policy.website_title }}
+Subject: Domain '{{ domain }}' has been activated
 
-Welcome to the {{ policy.website_title }} Web Mail Service.
+The domain <b>{{ domain }}</b> has been successfully activated.
 <P>
-Now you need to add whatever email addresses you want to use, e.g. <b>me@{{ user.user}}</b>.
-You do this by going into Settings->Accounts->Add Itentity, and adding whatever
-email addresses you want to use.
-<P>
-You can add as many email addresses as you want in whatever domains
-you own. To prove you own a domain and direct the mail
-to this service, you *MUST* add an MX record in the
-domain using the hostname key "{{ user.mx }}.{{ policy.email_domain }}"
-<P>
-To register additional domains to use in this account, you must
-now go to Settings -> Accounts and click "Add an Identity"
-<P>
-All domains you activate will authmaitcally get the default email address <b>[domain-name]@{{ policy.email_domain }}</b>,
-e.g. {{ user.user }}@{{ policy.email_domain }}
+Any the email addresses you added in this domain should now work.
 <P>
 If you have any problem or questions, just reply to this email.
 <P>
