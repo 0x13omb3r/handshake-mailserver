@@ -58,12 +58,13 @@ def as_simple_text(data):
 
 def do_make_hash(src):
     hsh = hashlib.sha256()
-    for x in range(0,10):
+    for x in range(0, 10):
         hsh.update(src.encode("utf-8"))
     return as_simple_text(hsh.digest())
 
+
 def make_hash(src):
-    for x in range(0,1000):
+    for x in range(0, 1000):
         src = do_make_hash(src)
     return src
 

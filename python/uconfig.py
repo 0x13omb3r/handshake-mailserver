@@ -45,7 +45,7 @@ def return_user(js, user):
     return ret_user
 
 
-def user_info_load(user):
+def load(user):
     user_file = user_file_name(user)
     if not os.path.isfile(user_file):
         return None, "File not found"
@@ -57,7 +57,7 @@ def user_info_load(user):
     return True, js
 
 
-def user_info_update(user, data):
+def update(user, data):
     user_file, lock_file = user_file_name(user, with_lock_name=True)
     if not os.path.isfile(user_file):
         return None
@@ -92,11 +92,19 @@ def user_info_update(user, data):
 
 
 if __name__ == "__main__":
-    print("INFO LOAD ->", user_info_load("users", "anon.webmail"))
-    print("INFO ADD ->",
-          user_info_update("users", "anon.webmail", {"temp": "value"}))
-    print("INFO LOAD ->", user_info_load("users", "anon.webmail"))
-    print("INFO ADD ->",
-          user_info_update("users", "anon.webmail", {"temp": None}))
-    print("INFO LOAD ->", user_info_load("users", "anon.webmail"))
-    print("INFO LOAD ->", user_info_load("users", "anon.webmail"))
+    print("INFO LOAD ->", load("anon.webmail"))
+    print(
+        "INFO UPDATE ->",
+        update("anon.webmail",
+               {"events": {
+                   "when_dt": misc.now(),
+                   "desc": "Some event"
+               }}))
+    print("INFO LOAD ->", load("anon.webmail"))
+    # print("INFO ADD ->",
+    #       update("anon.webmail", {"temp": "value"}))
+    # print("INFO LOAD ->", load("anon.webmail"))
+    # print("INFO ADD ->",
+    #       update("anon.webmail", {"temp": None}))
+    # print("INFO LOAD ->", load("anon.webmail"))
+    # print("INFO LOAD ->", load("anon.webmail"))

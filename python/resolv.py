@@ -19,7 +19,7 @@ import validation
 from log import this_log as log
 
 DNS_MAX_RESP = 4096
-MAX_TRIES = 10
+MAX_TRIES = 5
 DNS_FLAGS = {
     "QR": 0x8000,
     "AA": 0x0400,

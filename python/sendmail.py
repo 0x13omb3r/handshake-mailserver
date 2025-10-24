@@ -60,7 +60,7 @@ def post(template, data, server="127.0.0.1"):
     if "From" not in header or "To" not in header or "Subject" not in header:
         return False, "Header missing critical lines"
 
-    for tag in [ h for h in header if h not in DO_NOT_INCLUDE_TAGS]:
+    for tag in [h for h in header if h not in DO_NOT_INCLUDE_TAGS]:
         msg[tag] = header[tag]
 
     msg.attach(MIMEText("\n".join(lines), 'html'))
@@ -93,7 +93,7 @@ def main():
     args = parser.parse_args()
     data = json.loads(args.data)
     if args.user:
-        ok, this_user = uconfig.user_info_load(args.user)
+        ok, this_user = uconfig.load(args.user)
         if ok:
             data["user"] = this_user
         else:

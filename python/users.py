@@ -16,6 +16,7 @@ import executor
 import validation
 import uconfig
 import misc
+import sendmail
 from log import this_log as log
 
 
@@ -49,14 +50,14 @@ def login(sent_data, user_agent):
                                                             None) is None:
         return False, "Insufficient data"
 
-    ok, user_data = uconfig.user_info_load(sent_data["user"])
+    ok, user_data = uconfig.load(sent_data["user"])
     if not ok or user_data is None or "password" not in user_data:
         return False, f"User '{sent_data['user']}' not found or missing password"
 
     if not compare_passwords(sent_data["password"], user_data["password"]):
         return False, "Password does no match"
 
-    uconfig.user_info_update(sent_data["user"], {"last_login_dt": misc.now()})
+    uconfig.update(sent_data["user"], {"last_login_dt": misc.now()})
     return create_session_file(sent_data["user"], user_data, user_agent)
 
 
@@ -79,7 +80,7 @@ def check_session(session_code, user_agent):
         os.remove(file)
         return False, "Session file missing data or user-agent mismatch"
 
-    ok, user_data = uconfig.user_info_load(js["user"])
+    ok, user_data = uconfig.load(js["user"])
     if not ok or user_data is None:
         return False, "User in session file doesn't exist"
 
@@ -90,7 +91,7 @@ def check_session(session_code, user_agent):
 
 
 def check_password(user, sent_data):
-    ok, user_data = uconfig.user_info_load(user)
+    ok, user_data = uconfig.load(user)
     return compare_passwords(sent_data["password"], user_data["password"])
 
 
@@ -199,7 +200,7 @@ def close_account(user):
 
 
 def password_new(user, password):
-    uconfig.user_info_update(user, {"password": encrypt(password)})
+    uconfig.update(user, {"password": encrypt(password)})
     executor.create_command("webui_password_changed", "doms",
                             {"verb": "password_changed"})
     return True
@@ -243,18 +244,24 @@ def reset_user_password(sent_data):
     if (user := this_user.get("user", None)) is None:
         return False, "Invalid reset code"
 
-    ok, user_data = uconfig.user_info_load(user)
+    ok, user_data = uconfig.load(user)
     if not ok:
         return False, "Invalid reset code"
 
-    uconfig.user_info_update(user,
-                             {"password": encrypt(sent_data["password"])})
-
+    uconfig.update(user, {"password": encrypt(sent_data["password"])})
+    executor.create_command("webui_password_reset", "doms", {
+        "user": user,
+        "event": {
+            "when_dt": misc.now(),
+            "desc": "Password reset"
+        }
+    })
+    sendmail.post("password_is_reset", {"user": user_data})
     return True, None
 
 
 if __name__ == "__main__":
-    print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
+    print("INFO LOAD ->", uconfig.load("lord.webmail"))
 
 
 def debug_stuff():
@@ -267,11 +274,11 @@ def debug_stuff():
                 "password": "yes",
                 "confirm": "yes"
             }, "my-agent"))
-    # print(uconfig.user_info_load("james"))
-    # print(uconfig.user_info_update("james", {"user": "james", "password": "fred"}))
-    # print(uconfig.user_info_load("james"))
-    # print(uconfig.user_info_update("james", None))
-    # print(uconfig.user_info_load("james"))
+    # print(uconfig.load("james"))
+    # print(uconfig.update("james", {"user": "james", "password": "fred"}))
+    # print(uconfig.load("james"))
+    # print(uconfig.update("james", None))
+    # print(uconfig.load("james"))
     # print(password_compare("yes","lord.webmail"))
     # print(check_session("abc123","fred"))
 
@@ -281,11 +288,9 @@ def debug_stuff():
         print("CHECK_SESSION ->", check_session(uid["session"], "my-agent"))
 
     print("")
-    print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
-    print("INFO ADD ->",
-          uconfig.user_info_update("lord.webmail", {"temp": "value"}))
-    print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
-    print("INFO ADD ->",
-          uconfig.user_info_update("lord.webmail", {"temp": None}))
-    print("INFO LOAD ->", uconfig.user_info_load("lord.webmail"))
+    print("INFO LOAD ->", uconfig.load("lord.webmail"))
+    print("INFO ADD ->", uconfig.update("lord.webmail", {"temp": "value"}))
+    print("INFO LOAD ->", uconfig.load("lord.webmail"))
+    print("INFO ADD ->", uconfig.update("lord.webmail", {"temp": None}))
+    print("INFO LOAD ->", uconfig.load("lord.webmail"))
     # print(misc.make_session_code("james"))
