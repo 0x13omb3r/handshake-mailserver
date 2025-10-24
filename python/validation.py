@@ -41,42 +41,6 @@ def is_valid_email(email):
     return re.match(IS_EMAIL, name, re.IGNORECASE) is not None
 
 
-def check_mx_match(user, mx_rrs):
-    if ((mx_rrs is None) or (mx_rrs.get("Status", 99) != 0)
-            or ("Answer" not in mx_rrs)
-            or (not isinstance(mx_rrs["Answer"], list))
-            or (len(mx_rrs["Answer"]) != 1)):
-        return False
-    mx = mx_rrs["Answer"][0]
-    if mx.get("type", 0) != 15 or mx.get("data", None) is None:
-        return False
-    mx_rr = mx["data"].rstrip(".").lower().split()[1]
-    chk_rr = (user["mx"] + "." +
-              policy.get("email_domain")).rstrip(".").lower()
-    return chk_rr == mx_rr
-
-
-def is_user_active(user_data):
-    if (user := user_data.get("user", None)) is None:
-        return False
-    if (doms := user_data.get(
-            "domains",
-            None)) is None or not isinstance(doms, dict) or user not in doms:
-        return False
-    return doms[user]
-
-
-def is_email_active(user_data, email):
-    if (doms := user_data.get("domains", None)) is None:
-        return False
-    split_mail = email.rstrip(".").lower().split("@")
-    return split_mail[1] in doms and doms[split_mail[1]]
-
-
-def is_email_user_active(user_data, email):
-    return is_user_active(user_data) and is_email_active(user_data, email)
-
-
 def has_idn(name):
     if name is None or len(name) < 5:
         return False
@@ -192,7 +156,8 @@ def web_valid_new_account(user):
 
     tld = reply
     res = resolv.Resolver()
-    tld_dns = res.resolv(tld, "px", flags=0)
+    if (tld_dns := res.resolv(tld, "px", flags=0)) is None:
+        return False, "TLD Failed to resolve"
 
     if tld_dns.get("Status", 3) != 0:
         return False, "TLD does not exist"
@@ -200,8 +165,8 @@ def web_valid_new_account(user):
     if tld == user:
         return True, None
 
-    user_dns = res.resolv(user, "px")
-    if user_dns is None or user_dns.get("Status", 3) != 0:
+    if (user_dns := res.resolv(user, "px")) is None or user_dns.get(
+            "Status", 3) != 0:
         return False, "Domain does not exist"
 
     return True, None

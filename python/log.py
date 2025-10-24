@@ -68,8 +68,7 @@ class Log:
             where = inspect.stack()[1]
         txt = ""
         if where is not None:
-            fname = os.path.basename(where.filename).split(".")[
-                0]  # CODE - check if `basename` can remove suffix
+            fname = os.path.basename(where.filename).split(".")[0]
             txt = f"[{fname}:{str(where.lineno)}/{where.function}]"
 
         if self.to_syslog:

@@ -17,6 +17,41 @@ from log import this_log as log
 import misc
 
 BASE_UX_DIR = "/usr/local/etc/uid"
+RR_MX = 15
+
+
+def is_user_active(user_data):
+    if (user := user_data.get("user", None)) is None:
+        return False
+    if (doms := user_data.get(
+            "domains",
+            None)) is None or not isinstance(doms, dict) or user not in doms:
+        return False
+    return doms[user]
+
+
+def is_email_active(user_data, email):
+    if (doms := user_data.get("domains", None)) is None:
+        return False
+    split_mail = email.rstrip(".").lower().split("@")
+    return split_mail[1] in doms and doms[split_mail[1]]
+
+
+def check_mx_match(user_mx, mx_rrs):
+    if ((user_mx is None) or (mx_rrs is None)
+            or (mx_rrs.get("Status", 99) != 0) or ("Answer" not in mx_rrs)
+            or (not isinstance(mx_rrs["Answer"], list))
+            or (len(mx_rrs["Answer"]) != 1)):
+        return False
+
+    mx = mx_rrs["Answer"][0]
+    if mx.get("type", 0) != RR_MX or mx.get("data", None) is None:
+        return False
+
+    mx_rr = mx["data"].split()[1].rstrip(".").lower()
+    chk_rr = (user_mx + "." + policy.get("email_domain")).rstrip(".").lower()
+
+    return chk_rr == mx_rr
 
 
 def user_to_json(user_data):
@@ -61,8 +96,7 @@ class UserData:
         self.load_users()
         self.active_users = {
             user: True
-            for user in self.all_users
-            if validation.is_user_active(self.all_users[user])
+            for user in self.all_users if is_user_active(self.all_users[user])
         }
 
         for user in self.active_users:
@@ -238,7 +272,7 @@ class UserData:
                     fd.write(f"{dom}@{email_domain} {user}\n")
                 for email in [
                         e for e in user_data["identities"]
-                        if validation.is_email_active(user_data, e)
+                        if is_email_active(user_data, e)
                 ]:
                     fd.write(f"{email} {user}\n")
 
@@ -303,7 +337,8 @@ class UserData:
         user = this_user["user"]
         was_active = this_user["domains"].get(domain, False)
         dom_active = validation.check_mx_match(
-            this_user, self.resolver.resolv(domain, "mx"))
+            this_user.get("mx", None), self.resolver.resolv(domain, "mx"))
+
         log.debug(
             f"check_one_domain {user}:{domain} = {dom_active} (was {was_active})"
         )
