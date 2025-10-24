@@ -21,7 +21,7 @@ MULTILINE_TAGS = {"To", "CC", "BCC"}
 def post(template, data, server="127.0.0.1"):
     src = os.path.join(policy.EMAILS_DIR, template + ".eml")
     if not os.path.isfile(src):
-        return False, f"Template file {template} not found"
+        return False, f"Template file {src} not found"
 
     smtp_from = policy.get("manager_account") + "@" + policy.get(
         "email_domain")
@@ -48,6 +48,9 @@ def post(template, data, server="127.0.0.1"):
 
         del lines[0]
 
+    if "X-Env-From" in header:
+        smtp_from = header["X-Env-From"]
+
     if "To" not in header and "user" in data and "user" in data["user"]:
         header["To"] = data["user"]["user"] + "@" + policy.get("email_domain")
 
@@ -57,13 +60,16 @@ def post(template, data, server="127.0.0.1"):
     if "From" not in header or "To" not in header or "Subject" not in header:
         return False, "Header missing critical lines"
 
+    for tag in [ h for h in header if h not in DO_NOT_INCLUDE_TAGS]:
+        msg[tag] = header[tag]
+
     msg.attach(MIMEText("\n".join(lines), 'html'))
 
     log.debug(f"Sending email {template} to {header['To']}")
 
-    print(">>>>>", json.dumps(header, indent=2))
-    print(">>>>>", json.dumps(lines, indent=2))
-    return False, None
+    # print(">>>>>", json.dumps(header, indent=2))
+    # print(">>>>>", json.dumps(lines, indent=2))
+    # return False, None
 
     smtp_rcpt = []
     for hdr_tag in MULTILINE_TAGS:

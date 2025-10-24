@@ -1,1 +1,1 @@
-null: "| cat >/dev/null"
+no-return: "| cat >/dev/null"

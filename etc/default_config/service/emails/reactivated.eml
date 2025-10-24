@@ -1,10 +1,6 @@
-To: {{ user.user }}@{{ policy.email_domain }}
-From: {{ policy.manager_account }}@{{ policy.email_domain }}
+{% include "start.inc" %}
 Subject: Welcome back to {{ policy.website_title }}
 
 Your account <b>{{ user.user }}</b> has now ben reactivated.
-<P>
-If you have any problem or questions, just reply to this email.
-<P>
-&nbsp;&nbsp;&nbsp;{{ policy.manager_account }}
-&nbsp;&nbsp;&nbsp;{{ policy.manager_account }}@{{ policy.email_domain }}
+
+{% include "end.inc" %}

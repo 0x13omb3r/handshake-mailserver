@@ -228,9 +228,9 @@ def reset_user_password(sent_data):
     if not os.path.isfile(file):
         return False, "Invalid reset code"
 
-	if os.path.getmtime(file) + (86400 * 3) <= misc.now():
-		os.remove(file)
-		return False, "Invalid reset code"
+    if os.path.getmtime(file) + (86400 * 3) <= misc.now():
+        os.remove(file)
+        return False, "Invalid reset code"
 
     try:
         with open(file, "r") as fd:

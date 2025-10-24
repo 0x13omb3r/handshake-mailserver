@@ -1,12 +1,8 @@
-To: {{ user.user }}@{{ policy.email_domain }}
-From: {{ policy.manager_account }}@{{ policy.email_domain }}
+{% include "start.inc" %}
 Subject: Domain '{{ domain }}' has been activated
 
 The domain <b>{{ domain }}</b> has been successfully activated.
 <P>
 Any the email addresses you added in this domain should now work.
-<P>
-If you have any problem or questions, just reply to this email.
-<P>
-&nbsp;&nbsp;&nbsp;{{ policy.manager_account }}
-&nbsp;&nbsp;&nbsp;{{ policy.manager_account }}@{{ policy.email_domain }}
+
+{% include "end.inc" %}
