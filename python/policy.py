@@ -19,12 +19,12 @@ DEFAULT_POLICY_VALUES = {
     "never_active_account_expire": 7,
     "was_active_account_expire": 30,
     "manager_account": "manager",
-    "site_fqdn": "handshake.webmail",
-    "site_country": "GB",
-    "site_location": "London",
-    "site_org": "Handshake",
-    "site_org_unit": "Ops",
-    "site_state": "London"
+    "cert_site_fqdn": "handshake.webmail",
+    "cert_site_country": "GB",
+    "cert_site_location": "London",
+    "cert_site_org": "Handshake",
+    "cert_site_org_unit": "Ops",
+    "cert_site_state": "London"
 }
 
 

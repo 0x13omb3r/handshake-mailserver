@@ -31,13 +31,7 @@ mkdir /run/nginx; chown nginx: /run/nginx
 
 if ! test -s ${BASE}/pems/server.pem
 	then
-		${PYBASE}/make_server_pem.py \
-			-f ${POLICY_SITE_FQDN} \
-			-c ${POLICY_SITE_COUNTRY} \
-			-l ${POLICY_SITE_LOCATION} \
-			-o ${POLICY_SITE_ORG} \
-			-u ${POLICY_SITE_ORG_UNIT} \
-			-s ${POLICY_SITE_STATE} > ${BASE}/pems/server.pem
+		${PYBASE}/make_server_pem.py > ${BASE}/pems/server.pem
 	fi
 cp -a ${BASE}/pems/server.pem /run/pems/server.pem
 chmod 644 /run/pems/server.pem
