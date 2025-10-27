@@ -13,6 +13,7 @@ import uconfig
 import resolv
 import sendmail
 import validation
+import icann_tlds
 from log import this_log as log
 import misc
 
@@ -250,6 +251,7 @@ class UserData:
 
     def remake_mail_files(self, data):
         email_domain = policy.get("email_domain").rstrip(".").lower()
+        icann_smtp_relay = policy.get("icann_smtp_relay",None)
 
         pfx = os.path.join(policy.BASE, "postfix", "data", "transport")
         with open(pfx + ".tmp", "w") as fd:
@@ -258,6 +260,10 @@ class UserData:
                 doms = self.all_users[user]["domains"]
                 for dom in [d for d in doms if doms[d]]:
                     fd.write(f"{dom} local: $myhostname\n")
+            if icann_smtp_relay is not None:
+                icann_smtp_relay = icann_smtp_relay.rstrip(".").lower()
+                for tld in icann_tlds.ICANN_TLDS:
+                    fd.write(f".{tld}:     smtp: [{icann_smtp_relay}]\n")
 
         pfx = os.path.join(policy.BASE, "postfix", "data", "virtual")
         with open(pfx + ".tmp", "w") as fd:
