@@ -115,7 +115,7 @@ class UserData:
         user = this_user["user"]
         this_uid = self.find_free_uid()
         self.active_users[user] = True
-        ok, reply = uconfig.update(user, {"uid": this_uid})
+        ok, reply = uconfig.update(user, {"uid": this_uid}, with_events=False)
         if ok:
             this_user = reply
         executor.create_command("doms_runner_user_add", "root", {
@@ -138,14 +138,14 @@ class UserData:
         for file in all_user_files.stdout.decode('utf-8').strip().split():
             user = file.split("/")[-1][:-5]
             if user != manager_account:
-                ok, reply = uconfig.load(user)
+                ok, reply = uconfig.load(user, with_events=False)
                 if ok:
                     self.all_users[user] = reply
 
     def remake_unix_files(self, data):
         base_data = {}
         manager_account = policy.get("manager_account")
-        ok, manager_info = uconfig.load(manager_account)
+        ok, manager_info = uconfig.load(manager_account, with_events=False)
 
         for file in ["passwd", "shadow", "group"]:
             with open(os.path.join(BASE_UX_DIR, file), "r") as fd:
@@ -251,7 +251,7 @@ class UserData:
 
     def remake_mail_files(self, data):
         email_domain = policy.get("email_domain").rstrip(".").lower()
-        icann_smtp_relay = policy.get("icann_smtp_relay",None)
+        icann_smtp_relay = policy.get("icann_smtp_relay", None)
 
         pfx = os.path.join(policy.BASE, "postfix", "data", "transport")
         with open(pfx + ".tmp", "w") as fd:
@@ -321,6 +321,7 @@ class UserData:
     def check_one_user(self, this_user, check_all_domains=False):
         user = this_user["user"]
         save_this_user = False
+        this_user["events"] = []
         if (doms := this_user.get("domains", None)) is None:
             return
 
@@ -330,12 +331,12 @@ class UserData:
 
         if save_this_user:
             log.debug(f"saving user '{user}'")
-            ok, reply = uconfig.update(
-                user, {
-                    "last_login_dt": misc.now(),
-                    "domains": this_user["domains"],
-                    "events": this_user["events"]
-                })
+            ok, reply = uconfig.update(user, {
+                "last_login_dt": misc.now(),
+                "domains": this_user["domains"],
+                "events": this_user["events"]
+            },
+                                       with_events=False)
             if ok:
                 this_user = reply
 
@@ -373,8 +374,6 @@ class UserData:
 
         this_user["domains"][domain] = dom_active
         this_user["events"].append({
-            "when_dt":
-            misc.now(),
             "desc":
             f"Domain '{domain}' is now {'active' if dom_active else 'inactive'}"
         })
@@ -430,15 +429,14 @@ class UserData:
 
         self.need_remake_mail_files = True
 
-        ok, reply = uconfig.update(
-            this_user["user"], {
-                "events": {
-                    "when_dt": misc.now(),
-                    "desc": "Email Identities updated"
-                },
-                "identities": this_user["identities"],
-                "domains": this_user["domains"]
-            })
+        ok, reply = uconfig.update(this_user["user"], {
+            "events": {
+                "desc": "Email Identities updated"
+            },
+            "identities": this_user["identities"],
+            "domains": this_user["domains"]
+        },
+                                   with_events=False)
         if ok:
             this_user = reply
 
@@ -448,7 +446,7 @@ class UserData:
     def new_user_added(self, data):
         if (user := data.get("user", None)) is None:
             return False
-        ok, this_user = uconfig.load(user)
+        ok, this_user = uconfig.load(user, with_events=False)
         if not ok or this_user is None:
             return False
         this_user["user"] = user
@@ -500,12 +498,11 @@ class UserData:
         with open(os.path.join(policy.RESET_CODES, store_code), "w") as fd:
             fd.write(f'{ "user" : {user} }')
 
-        ok, reply = uconfig.update(user, {
-            "event": {
-                "when_dt": misc.now(),
+        ok, reply = uconfig.update(
+            user, {"event": {
                 "desc": "Password reset request"
-            }
-        })
+            }},
+            with_events=False)
         if ok:
             self.all_users[user] = reply
 
@@ -513,17 +510,6 @@ class UserData:
             "user": self.all_users[user],
             "reset_url_code": reset_url_code
         })
-
-    def add_user_event(self, data):
-        if (user := data.get("user", None)) is None or (event := data.get(
-                "event", None)) is None or not isinstance(event, dict):
-            return False
-        if user not in self.all_users:
-            return False
-        ok, reply = uconfig.update(user, {"events": event})
-        if ok:
-            self.all_users[user] = reply
-        return True
 
 
 def test_test(data):
@@ -547,7 +533,6 @@ DOMS_CMDS = {
     "password_changed": Users.password_changed,
     "account_closed": Users.account_closed,
     "request_password_reset": Users.request_password_reset,
-    "add_user_event": Users.add_user_event,
     "test": test_test
 }
 

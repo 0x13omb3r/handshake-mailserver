@@ -248,14 +248,13 @@ def reset_user_password(sent_data):
     if not ok:
         return False, "Invalid reset code"
 
-    uconfig.update(user, {"password": encrypt(sent_data["password"])})
-    executor.create_command("webui_password_reset", "doms", {
-        "user": user,
-        "event": {
-            "when_dt": misc.now(),
-            "desc": "Password reset"
-        }
-    })
+    uconfig.update(
+        user, {
+            "event": {
+                "desc": "Password reset"
+            },
+            "password": encrypt(sent_data["password"])
+        })
     sendmail.post("password_is_reset", {"user": user_data})
     return True, None
 

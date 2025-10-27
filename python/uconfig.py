@@ -45,7 +45,7 @@ def return_user(js, user):
     return ret_user
 
 
-def load(user):
+def load(user, with_events=True):
     user_file = user_file_name(user)
     if not os.path.isfile(user_file):
         return None, "File not found"
@@ -54,10 +54,12 @@ def load(user):
         js = json.load(fd)
 
     js["user"] = user
+    if not with_events and "events" in js:
+        del js["events"]
     return True, js
 
 
-def update(user, data):
+def update(user, data, with_events=True):
     user_file, lock_file = user_file_name(user, with_lock_name=True)
     if not os.path.isfile(user_file):
         return None
@@ -72,14 +74,23 @@ def update(user, data):
             js = json.load(fd)
 
             for item in data:
-                if data[item] is None:
+                this_data = data[item]
+                if this_data is None:
                     if item in js:
                         del js[item]
                 else:
-                    if item == "events" and isinstance(data[item], dict):
-                        js[item].append(data[item])
+                    if item == "events":
+                        if isinstance(this_data, dict):
+                            if "when_dt" not in this_data:
+                                this_data["when_dt"] = misc.now()
+                            js[item].append(this_data)
+                        elif isinstance(this_data, list):
+                            for each_event in this_data:
+                                if "when_dt" not in each_event:
+                                    each_event["when_dt"] = misc.now()
+                                js[item].append(each_event)
                     else:
-                        js[item] = data[item]
+                        js[item] = this_data
 
         js["amended_dt"] = misc.now()
         new_file = user_file + ".new"
@@ -88,18 +99,18 @@ def update(user, data):
         os.replace(new_file, user_file)
 
         js["user"] = user
+        if not with_events and "events" in js:
+            del js["events"]
+
         return True, js
 
 
 if __name__ == "__main__":
     print("INFO LOAD ->", load("anon.webmail"))
-    print(
-        "INFO UPDATE ->",
-        update("anon.webmail",
-               {"events": {
-                   "when_dt": misc.now(),
-                   "desc": "Some event"
-               }}))
+    print("INFO UPDATE ->",
+          update("anon.webmail", {"events": {
+              "desc": "Some event"
+          }}))
     print("INFO LOAD ->", load("anon.webmail"))
     # print("INFO ADD ->",
     #       update("anon.webmail", {"temp": "value"}))

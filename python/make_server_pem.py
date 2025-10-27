@@ -114,10 +114,18 @@ def make_pem(fqdn, location, organization, organizational_unit, state,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='EPP Jobs Runner')
     parser.add_argument("-f", '--fqdn', default=policy.get("cert_site_fqdn"))
-    parser.add_argument("-c", '--country', default=policy.get("cert_site_country"))
-    parser.add_argument("-l", '--location', default=policy.get("cert_site_location"))
-    parser.add_argument("-o", '--organization', default=policy.get("cert_site_org"))
-    parser.add_argument("-u", '--organizational-unit', default=policy.get("cert_site_org_unit"))
+    parser.add_argument("-c",
+                        '--country',
+                        default=policy.get("cert_site_country"))
+    parser.add_argument("-l",
+                        '--location',
+                        default=policy.get("cert_site_location"))
+    parser.add_argument("-o",
+                        '--organization',
+                        default=policy.get("cert_site_org"))
+    parser.add_argument("-u",
+                        '--organizational-unit',
+                        default=policy.get("cert_site_org_unit"))
     parser.add_argument("-s", '--state', default=policy.get("cert_site_state"))
     args = parser.parse_args()
 
