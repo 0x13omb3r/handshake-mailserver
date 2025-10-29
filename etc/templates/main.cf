@@ -8,7 +8,7 @@ transport_maps = lmdb:/opt/data/postfix/data/transport
 virtual_alias_maps = lmdb:/opt/data/postfix/data/virtual
 
 mail_owner = postfix
-mydomain = {{ policy.default_mail_domain }}
+mydomain = {{ policy.email_domain }}
 myorigin = $mydomain
 unknown_local_recipient_reject_code = 550
 mynetworks = 192.168.0.0/16, 127.0.0.0/8, 172.16.0.0/32
@@ -34,6 +34,6 @@ shlib_directory = /usr/lib/postfix
 smtpd_tls_cert_file = /run/pems/server.pem
 smtpd_tls_key_file = /run/pems/server.pem
 
-mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain, {{ policy.default_mail_domain }}
+mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain, {{ policy.email_domain }}
 
 smtpd_tls_security_level = may

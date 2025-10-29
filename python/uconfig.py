@@ -26,7 +26,7 @@ def user_file_name(user, with_make_dir=False, with_lock_name=False):
     this_hash = calc_hash(user)
     if with_make_dir:
         d = policy.USER_DIR
-        for dir in ["users", this_hash[0], this_hash[1]]:
+        for dir in [this_hash[0], this_hash[1]]:
             d = os.path.join(d, dir)
             if not os.path.isdir(d):
                 os.mkdir(d, mode=0o755)

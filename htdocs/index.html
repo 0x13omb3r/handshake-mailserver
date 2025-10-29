@@ -195,12 +195,24 @@ function do_size_one_space()
 function activate_account_instructions()
 {
 	let my_gap = "<div style='height: 20px;'></div>";
+
 	let x = "<table width=75% align=center border=0>";
 	x += settings_header(`Welcome to the ${gbl.config.policy.website_title} Service`);
 	x += `<tr><td style="white-space: normal">`;
 	x += `As of right now, your <b>${ctx.user.user}</b> account is not yet activated. You will NOT be able to use the email service until you activate your account. `;
 	x += `To activate this account you must add a DNS MX record into the domain <b>${ctx.user.user}</b>. It will need to look like this<p>`
-	x += my_gap+`<xmp>${ctx.user.user}.       600       IN       MX      10 ${ctx.user.mx}.${gbl.config.policy.default_mail_domain}.</xmp>`;
+
+	x += "</td></tr><tr><td>"
+
+	let mx = `10 ${ctx.user.mx}.${policy("email_domain")}.`;
+	x += my_gap+`<table id="mx_table" border=0><tr>`;
+	x += `<td><font face="monospace">${ctx.user.user}.&nbsp;&nbsp;&nbsp;600&nbsp;&nbsp;&nbsp;IN&nbsp;&nbsp;&nbsp;MX&nbsp;&nbsp;&nbsp;${mx}</font></td>`
+	x += `<td><a onClick="return copyToClip('${mx}','mx_table');" title="Copy MX records to clipboard" href=#>`;
+	x += `<span class=emoji>${gbl.copy}</span></a></td>`;
+	x += `</tr></table>`;
+
+	x += "</td></tr><tr><td>"
+
 	x += my_gap+"This is to ensure your email arrives here and you can prove you own the domain."
 	x += my_gap+"We will look for this record every fifteen miniutes, but due to DNS delays, it could take up to 24 hours for us to";
 	x += " be able to see it.<P>Once we see it, your account will be activated and you will be able to send & receive emails in the domain";
@@ -255,6 +267,19 @@ function user_info()
 }
 
 
+function user_landing(reply)
+{
+	hidePopUp();
+	catch_user_data(reply);
+	loggedIn();
+
+	if (is_user_active())
+		myStuff(true,"myDomains");
+	else
+		elm.userSpace.innerHTML = activate_account_instructions();
+}
+
+
 
 
 function doRegister()
@@ -282,9 +307,8 @@ function doRegister()
 
 	callApi("users/register",(ret,reply) => {
 		if (!ret) return def_errMsg("Error in registration",reply,"registerPopup");
-		hidePopUp();
-		catch_user_data(reply);
-		loggedIn();
+
+		user_landing(reply);
 
 		f.email.value = "";
 		f.password.value = "";
@@ -322,13 +346,10 @@ function doLogin()
 			if ("error" in reply) msg = reply["error"];
 			return regErr(msg,f.user);
 			}
-		hidePopUp();
-		catch_user_data(reply);
-		loggedIn();
 
+		user_landing(reply);
 		f.user.value = "";
 		f.password.value = "";
-
 		}, { json: data });
 
 	return false;
@@ -440,14 +461,9 @@ function go_welcome(with_push)
         if (ctx.session) {
             callApi("users/details",(ok,reply) => {
                 if (ok) {
-                    catch_user_data(reply);
-                    loggedIn();
-					if (is_user_active())
-						myStuff(true,"myDomains");
-					else
-						elm.userSpace.innerHTML = activate_account_instructions();
-                    }
-                check_router_path();
+                	user_landing(reply); 
+					check_router_path();
+					}
                 });
             } else { loggedOut(); check_router_path(); }
 
@@ -665,14 +681,15 @@ function userDetails()
 	for(let i of acct_desc) if (i[0] in ctx.user) {
 		let val = ctx.user[i[0]];
 		if (i[0]=="mx") {
-			let mx = `10 ${val}.${policy("default_mail_domain")}.`;
+			let mx = `10 ${val}.${policy("email_domain")}.`;
 			val = `<table id="mx_table" border=0><tr><td>`;
 			val += `<a onClick="return copyToClip('${mx}','mx_table');" title="Copy MX records to clipboard" href=#>`;
-			val += `<font size=+1>${gbl.copy}</font></a></td>`;
-			val += `<td><pre>${mx}</pre></td></tr></table>`;
+			val += `<span class=emoji>${gbl.copy}</span></a></td>`;
+			val += `<td><font face="monospace">${mx}</font></td></tr></table>`;
 			}
 		if (i[0]=="user") val = toUnicode(val);
-		x += `<tr><td align=right>${i[1]}&nbsp;:&nbsp;</td><td>${val}</td></tr>`;
+		if (i[0].slice(-3)=="_dt") val = local_dt(val);
+		x += `<tr><td class=promptCell>${i[1]}&nbsp;:&nbsp;</td><td>${val}</td></tr>`;
 		}
 	x += "</td></tr></table>"
 
@@ -734,8 +751,8 @@ function domainDetails()
 	x += settings_header("My Email Addresses",false);
 	x += "<tr><td><table width=100%>"
 	x += "<colgroup><col/><col width=200px/></colgroup>"
-	x += `<tr class=dataRow><td>${ctx.user.user}@${toUnicode(policy("default_mail_domain"))}</td><td class=emoji>${is_user_active()?gbl.tick:gbl.cross}</td></tr>`;
-	for(let i in ctx.user.identities) x += `<tr class=dataRow><td>${email_as_unicode(ctx.user.identities[i])}</td><td>${is_email_active(ctx.user,i)?gbl.tick:gbl.cross}</td></tr>`;
+	x += `<tr class=dataRow><td>${ctx.user.user}@${toUnicode(policy("email_domain"))}</td><td class=emoji>${is_user_active()?gbl.tick:gbl.cross}</td></tr>`;
+	for(let i in ctx.user.identities) x += `<tr class=dataRow><td>${email_as_unicode(ctx.user.identities[i])}</td><td class=emoji>${is_email_active(ctx.user,i)?gbl.tick:gbl.cross}</td></tr>`;
 	x += "</table></td></tr>";
 	return x+"</table>";
 }
@@ -750,6 +767,7 @@ function openMailAdmin() { openURL("/webmail/?"+ policy("manager_account")); }
 function refresh_user_space()
 {
 	if ((!ctx.user_space_fn)||(!ctx.user)) return;
+
 	callApi("users/details",(ok,reply) => {
 		if (ok) {
 			catch_user_data(reply);
@@ -797,7 +815,6 @@ function myStuff(with_push, value_to_show)
 		size_one_space();
 		});
 }
-
 
 
 
@@ -914,7 +931,7 @@ function make_theme_popup()
 
 <div class="popup">
 <span style='width: 75px;' tabindex=0 title="Get me logged in" class=myBtn onClick="toggleLogin(); return false;">Login</span>
-<span class="popuptext" id="loginPopup">
+<span style="margin-left: -400;" class="popuptext" id="loginPopup">
 	<table>
 		<form onSubmit='doLogin(); return false;' action="#" method=post name=formLogin>
 		<tr onClick="toggleLogin()"><Td colspan=2><div style="height: 15px;"></div></td></tr>

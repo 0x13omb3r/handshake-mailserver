@@ -1,8 +1,7 @@
-To: {{ user.user }}@{{ policy.email_domain }}
-From: {{ policy.manager_account }}@{{ policy.email_domain }}
+{% include "start.inc" %}
 Subject: Welcome to {{ policy.website_title }}
 
-Welcome to the {{ policy.website_title }} Web Mail Service.
+<h2>Welcome to the {{ policy.website_title }} Web Mail Service.</h2>
 <P>
 Now you need to add whatever email addresses you want to use, e.g. <b>me@{{ user.user}}</b>.
 You do this by going into Settings->Accounts->Add Itentity, and adding whatever
@@ -16,7 +15,7 @@ domain using the hostname key "{{ user.mx }}.{{ policy.email_domain }}"
 To register additional domains to use in this account, you must
 now go to Settings -> Accounts and click "Add an Identity"
 <P>
-All domains you activate will authmaitcally get the default email address <b>[domain-name]@{{ policy.email_domain }}</b>,
+Any domains you activate will automatically get the default email address <b>[domain-name]@{{ policy.email_domain }}</b>,
 e.g. {{ user.user }}@{{ policy.email_domain }}
 
 {% include "end.inc" %}

@@ -17,7 +17,6 @@ import icann_tlds
 from log import this_log as log
 import misc
 
-BASE_UX_DIR = "/usr/local/etc/uid"
 RR_MX = 15
 
 
@@ -115,9 +114,8 @@ class UserData:
         user = this_user["user"]
         this_uid = self.find_free_uid()
         self.active_users[user] = True
-        ok, reply = uconfig.update(user, {"uid": this_uid}, with_events=False)
-        if ok:
-            this_user = reply
+        this_user["uid"] = this_uid
+        uconfig.update(user, {"uid": this_uid}, with_events=False)
         executor.create_command("doms_runner_user_add", "root", {
             "verb": "make_home_dir",
             "data": {
@@ -148,7 +146,7 @@ class UserData:
         ok, manager_info = uconfig.load(manager_account, with_events=False)
 
         for file in ["passwd", "shadow", "group"]:
-            with open(os.path.join(BASE_UX_DIR, file), "r") as fd:
+            with open(os.path.join(policy.BASE_UX_DIR, file), "r") as fd:
                 base_data[file] = [line.strip() for line in fd.readlines()]
 
         with open("/run/passwd.tmp", "w+") as fd:
@@ -249,6 +247,14 @@ class UserData:
                 self.check_one_user(self.all_users[user])
         return True
 
+    def remake_mail_files_true(self, data):
+        self.need_remake_mail_files = True
+        return True
+
+    def remake_unix_files_true(self, data):
+        self.need_remake_unix_files = True
+        return True
+
     def remake_mail_files(self, data):
         email_domain = policy.get("email_domain").rstrip(".").lower()
         icann_smtp_relay = policy.get("icann_smtp_relay", None)
@@ -343,8 +349,8 @@ class UserData:
     def check_one_domain(self, this_user, domain):
         user = this_user["user"]
         was_active = this_user["domains"].get(domain, False)
-        dom_active = validation.check_mx_match(
-            this_user.get("mx", None), self.resolver.resolv(domain, "mx"))
+        dom_active = check_mx_match(this_user.get("mx", None),
+                                    self.resolver.resolv(domain, "mx"))
 
         log.debug(
             f"check_one_domain {user}:{domain} = {dom_active} (was {was_active})"
@@ -360,12 +366,13 @@ class UserData:
                 del self.active_users[user]
             else:
                 had_been_active = active_uid(this_user)
-                self.users_just_activated[user] = had_been_active
                 if had_been_active:
                     log.debug(f"re-activated user {user}")
+                    self.users_just_activated[user] = False
                 else:
                     self.assign_uid(this_user)
-                    log.debug(f"newly activated user {user}")
+                    log.debug(f"newly activated user {this_user}")
+                    self.users_just_activated[user] = True
                 self.active_users[user] = True
             self.need_remake_unix_files = True
         else:
@@ -527,8 +534,8 @@ DOMS_CMDS = {
     "email_users_welcome": Users.email_users_welcome,
     "user_age_check": Users.user_age_check,
     "run_mx_check": Users.run_mx_check,
-    "remake_unix_files": Users.remake_unix_files,
-    "remake_mail_files": Users.remake_mail_files,
+    "remake_unix_files": Users.remake_unix_files_true,
+    "remake_mail_files": Users.remake_mail_files_true,
     "start_up_new_files": Users.start_up_new_files,
     "password_changed": Users.password_changed,
     "account_closed": Users.account_closed,
@@ -605,7 +612,7 @@ def main():
                  with_debug=misc.debug_mode(),
                  to_syslog=args.syslog)
         if args.one not in DOMS_CMDS:
-            log.log("ERROR: DOMS CMD '{args.one}' not valid")
+            log.log(f"ERROR: DOMS CMD '{args.one}' not valid")
             return
         Users.dispatch_job(args.one,
                            json.loads(args.data) if args.data else None)

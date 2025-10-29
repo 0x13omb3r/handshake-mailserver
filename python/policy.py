@@ -35,6 +35,7 @@ class Policy:
     def __init__(self):
         self.BASE = os.environ.get("BASE", "/opt/data")
         self.SERVICE = os.path.join(self.BASE, "service")
+
         self.POLICY_FILE = os.path.join(self.SERVICE, "config", "policy.json")
         self.DOMAINS_FILE = os.path.join(self.SERVICE, "config",
                                          "used_domains.json")
@@ -44,6 +45,7 @@ class Policy:
         self.EMAILS_DIR = os.path.join(self.SERVICE, "emails")
         self.SESSIONS_DIR = os.path.join(self.SERVICE, "sessions")
         self.RESET_CODES = os.path.join(self.SERVICE, "reset_codes")
+        self.BASE_UX_DIR = "/usr/local/etc/uid"
 
         if not os.path.isfile(self.POLICY_FILE):
             with open(self.POLICY_FILE, "w+") as fd:

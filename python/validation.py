@@ -20,15 +20,15 @@ IS_FQDN = r'^([a-z0-9]([-a-z-0-9]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9]([-a-z0-9]{0,61
 IS_EMAIL = r'^[A-Za-z0-9\_\-\.]+$'
 IS_TLD = r'^[a-z0-9]([-a-z-0-9]{0,61}[a-z0-9]){0,1}[.]?$'
 
-RESERVED_ACCOUNT_NAMES = {
-    "root": True,
-    "poatmaster": True,
-    "rainloop": True,
-    "service": True,
-    policy.get("manager_account"): True
-}
-
 used_domains = fileloader.FileLoader(policy.DOMAINS_FILE)
+
+with open(os.path.join(policy.BASE_UX_DIR, "passwd"), "r") as fd:
+    reserved_account_names = {
+        line.split(":")[0]: True
+        for line in fd.readlines()
+    }
+reserved_account_names[policy.get("manager_account")] = True
+reserved_account_names["postmaster"] = True
 
 
 def is_valid_email(email):
@@ -125,7 +125,7 @@ def pre_check_user(user, is_new):
     if not is_valid_handshake(user):
         return False, "Invalid account name"
 
-    if user in RESERVED_ACCOUNT_NAMES:
+    if user in reserved_account_names:
         return False, "Reserved account name"
 
     tld = user.split(".")[-1]
@@ -174,7 +174,7 @@ def web_valid_new_account(user):
 
 # for testing
 if __name__ == "__main__":
-    print(web_valid_new_account("lord.webmail"))
+    print("\n".join(reserved_account_names))
     #print(email_active(sys.argv[1],dict.fromkeys(sys.argv[2].split(","),True)))
 
 

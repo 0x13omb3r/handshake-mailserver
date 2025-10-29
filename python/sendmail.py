@@ -67,10 +67,6 @@ def post(template, data, server="127.0.0.1"):
 
     log.debug(f"Sending email {template} to {header['To']}")
 
-    # print(">>>>>", json.dumps(header, indent=2))
-    # print(">>>>>", json.dumps(lines, indent=2))
-    # return False, None
-
     smtp_rcpt = []
     for hdr_tag in MULTILINE_TAGS:
         if hdr_tag in header and len(header[hdr_tag]) > 0:
@@ -98,7 +94,7 @@ def main():
             data["user"] = this_user
         else:
             print(f"ERROR: {args.user} - {this_user}")
-    post(args.message, data, args.server)
+    print(post(args.message, data, args.server))
 
 
 if __name__ == "__main__":

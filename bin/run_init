@@ -8,7 +8,9 @@ cp -a ${SRC}/uid/* /run/${file}
 
 if ! test -d ${BASE}/service -a ${BASE}/postfix -a ${BASE}/pems
 	then
-		cp -a /usr/local/etc/default_config/* ${BASE}/.
+		cd ${BASE}
+		tar xf /usr/local/etc/default_config.tgz
+		cd /
 	fi
 
 /usr/local/python/doms_runner.py -O remake_unix_files
@@ -16,7 +18,7 @@ if ! test -d ${BASE}/service -a ${BASE}/postfix -a ${BASE}/pems
 
 mkdir -p /run/exec/root /run/exec/doms
 chmod 770 /run/exec/root /run/exec/doms
-chgrp service: /run/exec/doms /run/exec/root
+chgrp service /run/exec/doms /run/exec/root
 
 ${PYBASE}/merge_templates.py
 . /run/templates/__include__
@@ -38,13 +40,6 @@ chmod 644 /run/pems/server.pem
 
 postfix set-permissions >/dev/null 2>&1
 
-
-mkdir -p ${BASE}/data/rainloop
-if ! test -f ${BASE}/data/rainloop/EMPTY
-	then
-		cp -a ${SRC}/data/. ${BASE}/data/rainloop/
-	fi
-
 RAINLOOP="${BASE}/service/rainloop/_data_/_default_"
 dst="${RAINLOOP}/configs/application.ini"
 src="/run/templates/application.ini"
@@ -56,7 +51,7 @@ if ! test -f ${dst} -a -f ${tag} || ! test ${dst} -nt ${tag}
 		chown rainloop: ${dst} ${tag}
 	fi
 
-dst="${RAINLOOP}/domains/${POLICY_DEFAULT_MAIL_DOMAIN}.ini"
+dst="${RAINLOOP}/domains/${POLICY_EMAIL_DOMAIN}.ini"
 src="/run/templates/webmail.localhost.ini"
 if ! test -f ${dst}
 	then
