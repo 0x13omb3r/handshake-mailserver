@@ -3,6 +3,6 @@ Subject: Domain '{{ domain }}' has been activated
 
 The domain <b>{{ domain }}</b> has been successfully activated.
 <P>
-Any the email addresses you added in this domain should now work.
+Any email addresses you added in this domain should now work.
 
 {% include "end.inc" %}

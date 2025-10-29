@@ -239,7 +239,6 @@ class UserData:
         return True
 
     def run_mx_check(self, data=None):
-        self.users_just_activated = {}
         if data is not None:
             self.check_one_user(data)
         else:

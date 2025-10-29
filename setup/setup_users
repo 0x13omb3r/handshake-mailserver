@@ -15,6 +15,7 @@ addgroup -g 851 -S rainloop
 adduser -u 851 -S -h /dev/null -G rainloop rainloop
 
 addgroup service postfix
+addgroup rainloop service
 
 for user in lp news uucp cron ftp sshd games ntp guest
 	do

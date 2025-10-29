@@ -57,9 +57,8 @@ COPY config/www.conf /etc/php84/php-fpm.d/www.conf
 COPY config/default.conf /etc/nginx/http.d/default.conf
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/php.ini /etc/php84/php.ini
-COPY cron/every_hour /etc/periodic/hourly/
-COPY cron/every_day /etc/periodic/daily/
-COPY cron/every_15min /etc/periodic/15min/
+COPY cron /usr/local/cron/
+COPY cron/root /var/spool/cron/crontabs/root
 
 COPY bin /usr/local/bin/
 COPY htdocs /usr/local/htdocs/
