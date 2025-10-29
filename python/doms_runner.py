@@ -365,7 +365,7 @@ class UserData:
             if was_active:
                 del self.active_users[user]
             else:
-                if active_uid(this_user)
+                if active_uid(this_user):
                     log.debug(f"re-activated user {user}")
                     self.users_just_activated[user] = False
                 else:
