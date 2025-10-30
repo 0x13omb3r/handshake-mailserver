@@ -338,11 +338,12 @@ class UserData:
 
         if save_this_user:
             log.debug(f"saving user '{user}'")
-            ok, reply = uconfig.update(user, {
-                "last_login_dt": misc.now(),
-                "domains": this_user["domains"],
-                "events": this_user["events"]
-            })
+            ok, reply = uconfig.update(
+                user, {
+                    "last_login_dt": misc.now(),
+                    "domains": this_user["domains"],
+                    "events": this_user["events"]
+                })
             if ok:
                 this_user = reply
 
@@ -435,13 +436,14 @@ class UserData:
 
         self.need_remake_mail_files = True
 
-        ok, reply = uconfig.update(this_user["user"], {
-            "events": {
-                "desc": "Email Identities updated"
-            },
-            "identities": this_user["identities"],
-            "domains": this_user["domains"]
-        })
+        ok, reply = uconfig.update(
+            this_user["user"], {
+                "events": {
+                    "desc": "Email Identities updated"
+                },
+                "identities": this_user["identities"],
+                "domains": this_user["domains"]
+            })
         if ok:
             this_user = reply
 
@@ -500,9 +502,7 @@ class UserData:
         with open(os.path.join(policy.RESET_CODES, store_code), "w") as fd:
             json.dump({"user": user}, fd)
 
-        uconfig.update(user, {"events": {
-            "desc": "Password reset requested"
-        }})
+        uconfig.update(user, {"events": {"desc": "Password reset requested"}})
 
         return sendmail.post("request_password_reset", {
             "user": self.all_users[user],

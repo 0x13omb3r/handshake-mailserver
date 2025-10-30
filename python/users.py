@@ -117,10 +117,16 @@ PASSWORD_REQUEST_WEB = {
 
 
 def request_password_reset(user, sent_data):
-    log.log(f"{user}: {sent_data}")
+    if user is not None:
+        return False, "You are already logged in"
+
+    log.debug(f"request_password_reset:: {user}: {sent_data} - {validation.user_already_has_reset(sent_data.get("user", None))}")
     ok, reply = validation.web_validate(sent_data, PASSWORD_REQUEST_WEB)
     if not ok:
         return False, reply
+
+    if validation.user_already_has_reset(sent_data.get("user", None)):
+        return False, "Password reset request already exists"
 
     executor.create_command(
         "webui_password_request", "doms", {
@@ -237,7 +243,7 @@ def reset_user_password(sent_data):
     if not os.path.isfile(file):
         return False, "Invalid reset code"
 
-    if os.path.getmtime(file) + (86400 * 3) <= time.time():
+    if os.path.getmtime(file) + (86400 * 2) <= time.time():
         os.remove(file)
         return False, "Invalid reset code"
 

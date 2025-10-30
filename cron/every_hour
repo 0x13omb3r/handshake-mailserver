@@ -11,3 +11,5 @@ if test -f ${svr_pem} -a ${svr_pem} -nt ${svr_dst}
 		killall stunnel
 		postfix reload
 	fi
+
+find ${BASE}/service/reset_codes/. -mtime +1 -type f -delete
