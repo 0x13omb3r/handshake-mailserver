@@ -68,6 +68,8 @@ def user_has_changed(old_user, this_user):
 def clean_up_emails(emails):
     email_domain = policy.get("email_domain").rstrip(".").lower()
     new_list = []
+    for email in emails:
+        log.debug(f"{email}: {validation.is_valid_email(email)}")
     for email in [e for e in emails if validation.is_valid_email(e)]:
         user, dom = email.split("@")
         if dom != email_domain:
@@ -115,7 +117,7 @@ class UserData:
         this_uid = self.find_free_uid()
         self.active_users[user] = True
         this_user["uid"] = this_uid
-        uconfig.update(user, {"uid": this_uid}, with_events=False)
+        uconfig.update(user, {"uid": this_uid})
         executor.create_command("doms_runner_user_add", "root", {
             "verb": "make_home_dir",
             "data": {
@@ -340,8 +342,7 @@ class UserData:
                 "last_login_dt": misc.now(),
                 "domains": this_user["domains"],
                 "events": this_user["events"]
-            },
-                                       with_events=False)
+            })
             if ok:
                 this_user = reply
 
@@ -440,8 +441,7 @@ class UserData:
             },
             "identities": this_user["identities"],
             "domains": this_user["domains"]
-        },
-                                   with_events=False)
+        })
         if ok:
             this_user = reply
 
@@ -490,26 +490,19 @@ class UserData:
         return None
 
     def request_password_reset(self, data):
-        email = data.get("email", None)
-        pin = data.get("pin", None)
-        if email is None or pin is None:
-            return False
-        if (user := self.find_user_by_email(email)) is None:
+        if (user := data.get("user", None)) is None or (pin := data.get(
+                "pin", None)) is None:
             return False
 
-        reset_url_code = misc.make_session_code(user["user"])
+        reset_url_code = misc.make_session_code(user)
         store_code = misc.make_hash(reset_url_code + ":" + pin)
 
         with open(os.path.join(policy.RESET_CODES, store_code), "w") as fd:
-            fd.write(f'{ "user" : {user} }')
+            json.dump({"user": user}, fd)
 
-        ok, reply = uconfig.update(
-            user, {"event": {
-                "desc": "Password reset request"
-            }},
-            with_events=False)
-        if ok:
-            self.all_users[user] = reply
+        uconfig.update(user, {"events": {
+            "desc": "Password reset requested"
+        }})
 
         return sendmail.post("request_password_reset", {
             "user": self.all_users[user],

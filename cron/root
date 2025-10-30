@@ -1,4 +1,4 @@
-*/5	*	*	*	*	/usr/local/cron/every_15mins
+#DEBUG */5	*	*	*	*	/usr/local/cron/every_15mins
 */15	*	*	*	*	/usr/local/cron/every_15mins
 0	*	*	*	*	/usr/local/cron/every_hour
 0	3	*	*	*	/usr/local/cron/every_day

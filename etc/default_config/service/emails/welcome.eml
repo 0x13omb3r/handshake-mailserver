@@ -4,16 +4,17 @@ Subject: Welcome to {{ policy.website_title }}
 <h2>Welcome to the {{ policy.website_title }} Web Mail Service.</h2>
 <P>
 Now you need to add whatever email addresses you want to use, e.g. <b>me@{{ user.user}}</b>.
-You do this by going into Settings->Accounts->Add Itentity, and adding whatever
-email addresses you want to use.
+You do this by going into Settings->Accounts then click "Add an Identity",
+and adding whatever email addresses you want to use.
 <P>
 You can add as many email addresses as you want in whatever domains
-you own. To prove you own a domain and direct the mail
-to this service, you *MUST* add an MX record in the
-domain using the hostname key "{{ user.mx }}.{{ policy.email_domain }}"
+you own. To prove you own a domain, and direct the mail
+to this service, you *MUST* also add an MX record in the
+domain using the hostname key "{{ user.mx }}.{{ policy.email_domain }}", just as before.
 <P>
-To register additional domains to use in this account, you must
-now go to Settings -> Accounts and click "Add an Identity"
+To register additional domains to use in this account, you also
+go to Settings -> Accounts and click "Add an Identity", then
+add email addresses with different domains.
 <P>
 Any domains you activate will automatically get the default email address <b>[domain-name]@{{ policy.email_domain }}</b>,
 e.g. {{ user.user }}@{{ policy.email_domain }}

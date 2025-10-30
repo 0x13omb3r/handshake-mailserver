@@ -58,7 +58,7 @@ if ((gbl.theme == null)||(!(gbl.theme in theme_colours))) {
 changeTheme(gbl.theme);
 
 if (window.location.pathname!="/") {
-	ctx.router_path = window.location.pathname;
+	window.localStorage.router_path = window.location.pathname;
 	window.location = window.location.origin;
 	}
 
@@ -296,7 +296,7 @@ function doRegister()
 	let fqdn = toASCII(f.user.value);
 	if (f.password.value != f.confirm.value) return regErr("Passwords do not match",f.password);
 	if (!valid_email.test(f.email.value)) return regErr("Invalid email address",f.email);
-	if (!fqdnCheck.test(fqdn)) return regErr("Invalid domain name",f.user);
+	if ((!fqdnCheck.test(fqdn))&&(!tldCheck.test(fqdn))) return regErr("Invalid domain name",f.user);
 
 	let data = {
 		"user":fqdn,
@@ -487,7 +487,7 @@ function router_reset_password(params)
 
 	let x = "";
 	x += "<form name=resetPass action=# method=post onSubmit='return do_reset_password();'><table width=75% id='reset_table' align=center border=0>";
-	x += "<tr><th colspan=2>Reset your password</th></tr>";
+	x += "<tr><th colspan=2>Reset Your Password</th></tr>";
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
 	x += `<input type=hidden name=reset_code value='${params[0]}'>`;
 	x += '<tr><td class=formPrompt>&nbsp;Reset PIN Number:&nbsp;</td><td><input onkeyUp="keyEsc(event);" style="width: 100px;" id="reset_pin">&nbsp;</td></tr>';
@@ -510,6 +510,7 @@ function router_reset_password(params)
 
 function do_reset_password()
 {
+	console.log("here");
 	send_json = {
 		"pin": document.resetPass.reset_pin.value,
 		"code": document.resetPass.reset_code.value,
@@ -517,7 +518,7 @@ function do_reset_password()
 		"confirm": document.resetPass.reset_confirm.value
 		};
 
-	if (send_json.code.length != 30) { go_welcome_page(); return false; }
+	if (send_json.code.length != 43) { go_welcome_page(); return false; }
 	if (send_json.pin.length != 4) {
 		errMsg("Invalid PIN Number");
 		document.resetPass.reset_pin.focus();
@@ -544,15 +545,13 @@ function do_reset_password()
 
 function check_router_path()
 {
-	if (!ctx.router_path) return;
-	delete ctx.router_path
+	let router_path = window.localStorage.router_path;
+	window.localStorage.removeItem("router_path");
+	if (!router_path) return;
 
 	let router = {
 		"pass_reset": router_reset_password,
 		};
-
-	let router_path = window.localStorage.router_path;
-	window.localStorage.removeItem("router_path");
 
 	let path_parts = router_path.split("/").slice(1);
 	if (!(path_parts[0] in router)) return;
@@ -827,13 +826,13 @@ function AddkeyDown(event,idx,rrs_id,rec_id) {
 function submit_resend()
 {
 	send_json = {
-		"email": document.resendPass.email.value,
+		"user": document.resendPass.user.value,
 		"pin":document.resendPass.pin.value
 		};
 
-	if (!valid_email.test(send_json.email)) {
-		errMsg("Email address is invalid",'resend_table');
-		document.resendPass.email.focus();
+	if ((!fqdnCheck.test(send_json.user))&&(!tldCheck.test(send_json.user))) {
+		errMsg("Account name is invalid",'resend_table');
+		document.resendPass.user.focus();
 		return false;
 		}
 
@@ -860,23 +859,23 @@ function resend_password(with_push)
 	pin_code = (Math.trunc(Math.random()*1000000)).toString().slice(-4);
 	let x = "<form name=resendPass action=# method=post onSubmit='return submit_resend();'><table width=65% id='resend_table' align=center border=0>";
 	x += settings_header("Reset Password",true);
-	x += "<tr><td>Enter your email address below and we will email you a link to reset your password</td></tr>";
+	x += "<tr><td>Enter your account name below and we will email you a link to reset your password</td></tr>";
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
 	x += "<tr><Td style='white-space: normal;'>When you click the password reset link in the email, you will be asked for the PIN number shown below. ";
 	x += "<br>You will <B>NOT</b> be able to reset your password without this PIN Number</td></tr>"
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
 	x += `<tr><td><h2>${pin_code}</h2></td></tr>`;
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
-	x += "<tr><td><table width=100%><tr><td class=formPrompt>Your recovery email address:</td>";
+	x += "<tr><td><table width=100%><tr><td class=formPrompt>Your account name:</td>";
 	x += `<input type=hidden name=pin value='${pin_code}'>`;
-	x += "<td><input autofocus style='width: 350px;' name=email></td></tr>";
+	x += "<td><input autofocus style='width: 350px;' name=user></td></tr>";
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
-	x += "<tr><td class=btmBtnBar colspan=2><input type=submit value='Reset Password' class=myBtn></td></tr>";
+	x += "<tr><td class=btmBtnBar colspan=2><input type=submit value='Request Reset' class=myBtn></td></tr>";
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
 	x += "</form></table></td></tr></table>";
 	elm.userSpace.innerHTML = x;
 	show_one_space("userSpace");
-	document.resendPass.email.focus();
+	document.resendPass.user.focus();
 	return false;
 }
 

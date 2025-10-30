@@ -59,7 +59,7 @@ def load(user, with_events=True):
     return True, js
 
 
-def update(user, data, with_events=True):
+def update(user, data, with_events=False):
     user_file, lock_file = user_file_name(user, with_lock_name=True)
     if not os.path.isfile(user_file):
         return None
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     print("INFO LOAD ->", load("anon.webmail"))
     print("INFO UPDATE ->",
           update("anon.webmail", {"events": {
-              "desc": "Some event"
+              "desc": "New Some event"
           }}))
     print("INFO LOAD ->", load("anon.webmail"))
     # print("INFO ADD ->",

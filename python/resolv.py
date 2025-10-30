@@ -47,7 +47,7 @@ def resolv_host(server):
     """ resolve {host} to an IP if its a host name """
     if validators.ip_address.ipv4(server):
         return server
-    if validation.is_valid_handshake(server):
+    if validation.is_valid_account(server):
         return socket.gethostbyname(server)
     return None
 
@@ -97,7 +97,7 @@ class Resolver:
                with_dnssec=False,
                include_raw=False,
                servers=None):
-        if not validation.is_valid_handshake(name):
+        if not validation.is_valid_account(name):
             raise ResolvError(f"Hostname '{name}' failed validation")
 
         if servers is not None:
@@ -113,7 +113,7 @@ class Resolver:
         if with_dnssec:
             self.include_raw = True
 
-        if not validation.is_valid_handshake(name):
+        if not validation.is_valid_account(name):
             raise ResolvError(f"Hostname '{name}' failed validation")
 
         rdtype = int(rdtype) if isinstance(
@@ -300,7 +300,7 @@ def main():
                         action="store_true")
     args = parser.parse_args()
 
-    if not validation.is_valid_handshake(args.name):
+    if not validation.is_valid_account(args.name):
         print(f"ERROR: '{args.name}' is an invalid host name")
     else:
         res = Resolver()

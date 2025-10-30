@@ -2,5 +2,8 @@
 
 . /usr/local/bin/inc
 
-find ${BASE}/service/sessions -mmin +360 -type f -delete
+session_expiry=$(expr $(/usr/local/python/policy.py session_expiry) / 30)
+
+find ${BASE}/service/sessions -mmin +${session_expiry} -type f -delete
+
 /usr/local/python/executor.py -t doms -v run_mx_check

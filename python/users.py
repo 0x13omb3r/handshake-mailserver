@@ -111,7 +111,7 @@ def valid_reset_pin(pin):
 
 
 PASSWORD_REQUEST_WEB = {
-    "email": [True, validators.email],
+    "user": [True, validation.is_valid_account],
     "pin": [True, valid_reset_pin]
 }
 
@@ -126,7 +126,7 @@ def request_password_reset(user, sent_data):
         "webui_password_request", "doms", {
             "verb": "request_password_reset",
             "data": {
-                "email": sent_data["email"],
+                "user": sent_data["user"],
                 "pin": sent_data["pin"]
             }
         })
@@ -201,8 +201,12 @@ def close_account(user):
 
 def password_new(user, password):
     uconfig.update(user, {"password": encrypt(password)})
-    executor.create_command("webui_password_changed", "doms",
-                            {"verb": "password_changed"})
+    executor.create_command("webui_password_changed", "doms", {
+        "verb": "password_changed",
+        "data": {
+            "user": user
+        }
+    })
     return True
 
 
@@ -215,6 +219,7 @@ def valid_reset_code(code):
 PASSWORD_RESET_WEB = {
     "code": [True, valid_reset_code],
     "pin": [True, valid_reset_pin],
+    "confirm": [True, None],
     "password": [True, None]
 }
 
@@ -224,12 +229,15 @@ def reset_user_password(sent_data):
     if not ok:
         return False, reply
 
+    if sent_data["password"] != sent_data["confirm"]:
+        return False, "Passwords do not match"
+
     store_code = misc.make_hash(sent_data["code"] + ":" + sent_data["pin"])
     file = os.path.join(policy.RESET_CODES, store_code)
     if not os.path.isfile(file):
         return False, "Invalid reset code"
 
-    if os.path.getmtime(file) + (86400 * 3) <= misc.now():
+    if os.path.getmtime(file) + (86400 * 3) <= time.time():
         os.remove(file)
         return False, "Invalid reset code"
 
@@ -250,8 +258,8 @@ def reset_user_password(sent_data):
 
     uconfig.update(
         user, {
-            "event": {
-                "desc": "Password reset"
+            "events": {
+                "desc": "Password has been reset"
             },
             "password": encrypt(sent_data["password"])
         })

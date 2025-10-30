@@ -17,7 +17,8 @@ from policy import this_policy as policy
 
 IS_HOST = r'^(\*\.|)([\_a-z0-9]([-a-z-0-9]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9]([-a-z0-9]{0,61}[a-z0-9]){0,1}[.]?$'
 IS_FQDN = r'^([a-z0-9]([-a-z-0-9]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9]([-a-z0-9]{0,61}[a-z0-9]){0,1}[.]?$'
-IS_EMAIL = r'^[A-Za-z0-9\_\-\.]+$'
+IS_TLD = r'^[a-z0-9]([\-a-z0-9]{0,61}[a-z0-9])[.]?$'
+IS_EMAIL = r'^[a-z0-9\_\-\.]+$'
 IS_TLD = r'^[a-z0-9]([-a-z-0-9]{0,61}[a-z0-9]){0,1}[.]?$'
 
 used_domains = fileloader.FileLoader(policy.DOMAINS_FILE)
@@ -33,7 +34,7 @@ reserved_account_names["postmaster"] = True
 
 def is_valid_email(email):
     name, dom = email.rstrip(".").lower().split("@")
-    if not is_valid_fqdn(dom):
+    if not is_valid_account(dom):
         return False
     tld = dom.split(".")[-1]
     if tld in icann_tlds.ICANN_TLDS and not policy.get("allow_icann_domains"):
@@ -49,7 +50,7 @@ def has_idn(name):
     return name.find(".xn--") > 0
 
 
-def is_valid_handshake(name):
+def is_valid_account(name):
     return is_valid_fqdn(name) or is_valid_tld(name)
 
 
@@ -122,7 +123,7 @@ def web_validate(sent_data, rules):
 
 
 def pre_check_user(user, is_new):
-    if not is_valid_handshake(user):
+    if not is_valid_account(user):
         return False, "Invalid account name"
 
     if user in reserved_account_names:
@@ -174,7 +175,8 @@ def web_valid_new_account(user):
 
 # for testing
 if __name__ == "__main__":
-    print("\n".join(reserved_account_names))
+    print(sys.argv[1],is_valid_email(sys.argv[1]))
+    # print("\n".join(reserved_account_names))
     #print(email_active(sys.argv[1],dict.fromkeys(sys.argv[2].split(","),True)))
 
 
