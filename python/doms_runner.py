@@ -20,23 +20,6 @@ import misc
 RR_MX = 15
 
 
-def is_user_active(user_data):
-    if (user := user_data.get("user", None)) is None:
-        return False
-    if (doms := user_data.get(
-            "domains",
-            None)) is None or not isinstance(doms, dict) or user not in doms:
-        return False
-    return doms[user]
-
-
-def is_email_active(user_data, email):
-    if (doms := user_data.get("domains", None)) is None:
-        return False
-    split_mail = email.rstrip(".").lower().split("@")
-    return split_mail[1] in doms and doms[split_mail[1]]
-
-
 def check_mx_match(user_mx, mx_rrs):
     if ((user_mx is None) or (mx_rrs is None)
             or (mx_rrs.get("Status", 99) != 0) or ("Answer" not in mx_rrs)
@@ -68,8 +51,6 @@ def user_has_changed(old_user, this_user):
 def clean_up_emails(emails):
     email_domain = policy.get("email_domain").rstrip(".").lower()
     new_list = []
-    for email in emails:
-        log.debug(f"{email}: {validation.is_valid_email(email)}")
     for email in [e for e in emails if validation.is_valid_email(e)]:
         user, dom = email.split("@")
         if dom != email_domain:
@@ -98,7 +79,7 @@ class UserData:
         self.load_users()
         self.active_users = {
             user: True
-            for user in self.all_users if is_user_active(self.all_users[user])
+            for user in self.all_users if misc.is_user_active(self.all_users[user])
         }
 
         for user in self.active_users:
@@ -285,7 +266,7 @@ class UserData:
                     fd.write(f"{dom}@{email_domain} {user}\n")
                 for email in [
                         e for e in user_data["identities"]
-                        if is_email_active(user_data, e)
+                        if misc.is_email_active(user_data, e)
                 ]:
                     fd.write(f"{email} {user}\n")
 

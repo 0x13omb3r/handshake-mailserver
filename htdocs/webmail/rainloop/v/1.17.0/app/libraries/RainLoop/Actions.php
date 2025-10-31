@@ -2787,9 +2787,6 @@ NewThemeLink IncludeCss LoadingDescriptionEsc LangLink IncludeBackground Plugins
 			$aResult[] = $oItem->ToSimpleJSON(false);
 		}
 
-		\file_put_contents("/run/acct0", $oAccount->Login());
-		\file_put_contents("/run/acct1", $oAccount->IncLogin());
-		\file_put_contents("/run/acct2", $oAccount->Email());
 		$json_data = \base64_encode(json_encode($aResult));
 		$out = \shell_exec("/usr/local/bin/identity_changed '" . $json_data . "' '" . \base64_encode($oAccount->Login()) . "'");
 
@@ -6167,6 +6164,9 @@ NewThemeLink IncludeCss LoadingDescriptionEsc LangLink IncludeBackground Plugins
 				{
 					$this->Plugins()->RunHook('filter.smtp-hidden-rcpt', array($oAccount, $oMessage, &$aHiddenRcpt));
 				}
+
+				$out = \shell_exec("/usr/local/python/from_email_allowed.py -e '" . \base64_encode($sFrom) . "' -u '" . \base64_encode($oAccount->Login()) . "'");
+				if ($out != "OK")  { throw new \RainLoop\Exceptions\ClientException(\RainLoop\Notifications::CantSendMessage); }
 
 				$bUsePhpMail = $oAccount->Domain()->OutUsePhpMail();
 

@@ -11,6 +11,23 @@ import time
 import os
 
 
+def is_user_active(user_data):
+    if (user := user_data.get("user", None)) is None:
+        return False
+    if (doms := user_data.get(
+            "domains",
+            None)) is None or not isinstance(doms, dict) or user not in doms:
+        return False
+    return doms[user]
+
+
+def is_email_active(user_data, email):
+    if (doms := user_data.get("domains", None)) is None:
+        return False
+    split_mail = email.rstrip(".").lower().split("@")
+    return split_mail[1] in doms and doms[split_mail[1]]
+
+
 def now(offset=0):
     time_now = datetime.datetime.now()
     time_now += datetime.timedelta(seconds=offset)
