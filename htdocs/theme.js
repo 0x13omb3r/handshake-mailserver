@@ -106,7 +106,7 @@ function theme_css(theme) {
 
 ::placeholder {
 	color: #${cols[12]};
-	opacity: 1; }
+	opacity: 0.5; }
 
 .topLink { font-size: 20px; }
 h2 { text-align: center; }

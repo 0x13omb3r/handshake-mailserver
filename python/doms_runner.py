@@ -79,7 +79,8 @@ class UserData:
         self.load_users()
         self.active_users = {
             user: True
-            for user in self.all_users if misc.is_user_active(self.all_users[user])
+            for user in self.all_users
+            if misc.is_user_active(self.all_users[user])
         }
 
         for user in self.active_users:

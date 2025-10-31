@@ -163,17 +163,30 @@ def users_update():
     return req.send_user_data()
 
 
+@application.route('/wmapi/users/email', methods=['POST'])
+def users_email():
+    req = WebuiReq()
+    if not req.is_logged_in:
+        return req.abort(NOT_LOGGED_IN)
+
+    ok, reply = users.update_email(req.user, req.post_js)
+    if not ok:
+        return req.abort(reply)
+
+    return req.response("OK")
+
+
 @application.route('/wmapi/users/password', methods=['POST'])
 def users_password():
     req = WebuiReq()
     if not req.is_logged_in:
         return req.abort(NOT_LOGGED_IN)
 
-    if not users.check_password(req.user, req.post_js):
-        return req.abort("Password match failed")
+    ok, reply = users.check_password(req.user, req.post_js)
+    if not ok:
+        return req.abort(reply)
 
     users.password_new(req.user, req.post_js["new_password"])
-
     return req.response("OK")
 
 

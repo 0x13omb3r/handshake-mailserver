@@ -490,7 +490,7 @@ function router_reset_password(params)
 	x += "<tr><th colspan=2>Reset Your Password</th></tr>";
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
 	x += `<input type=hidden name=reset_code value='${params[0]}'>`;
-	x += '<tr><td class=formPrompt>&nbsp;Reset Security Code:&nbsp;</td><td><input onkeyUp="keyEsc(event);" style="width: 100px;" id="reset_pin">&nbsp;</td></tr>';
+	x += '<tr><td class=formPrompt>&nbsp;Reset Security Code:&nbsp;</td><td><input autocomplete="one-time-code" onkeyUp="keyEsc(event);" style="width: 100px;" id="reset_pin">&nbsp;</td></tr>';
 	x += '<tr><td class=formPrompt>&nbsp;Password:&nbsp;</td><td><input autocomplete="new-password" onkeyUp="keyEsc(event);" style="width: 250px;" type=password id="reset_password">&nbsp;</td></tr>';
 	x += '<tr><td class=formPrompt>&nbsp;Confirm:&nbsp;</td><td><input autocomplete="new-password" onkeyUp="keyEsc(event);" style="width: 250px;" type=password id="reset_confirm">&nbsp;</td></tr>';
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
@@ -510,7 +510,6 @@ function router_reset_password(params)
 
 function do_reset_password()
 {
-	console.log("here");
 	send_json = {
 		"pin": document.resetPass.reset_pin.value,
 		"code": document.resetPass.reset_code.value,
@@ -578,34 +577,56 @@ function catch_user_data(reply)
 
 
 
-function postUserPassword()
+function postRecoveryEmail()
 {
-	let f = document.editUserPassword;
-	function regErr(err,item) { errMsg(err,"editUserPassword"); item.focus(); return false; }
+	function regErr(err,item) { errMsg(err,"sectRecoveryEmail"); item.focus(); return false; }
 
-	if (f.password.value=="") return regErr("Password missing",f.password);
-	if (f.new_password.value=="") return regErr("New password missing",f.new_password);
-	if (f.confirm_password.value=="") return regErr("Confirm password missing",f.confirm_password);
+	let e = document.getElementById("new_recovery_email");
+	if ((!e)||(!e.value)) return regErr("Missing email value",e);
+	if (!valid_email.test(e.value)) return regErr("Invalid email address",e);
+	if (e.value==ctx.user.email) return regErr("New Recovery Email address isn't different",e);
 
-	if (f.new_password.value != f.confirm_password.value)
-		return regErr("Passwords do not match",f.new_password);
-
-	let data = {
-		"password": f.password.value,
-		"new_password": f.new_password.value,
-		};
-
-	callApi("users/password",(ret,reply) => {
-		if (ret) {
-			errMsg("Password changed","editUserPassword");
+	callApi("users/email",(ok,reply) => {
+		if (!ok) return def_errMsg("Recovery email address change failed",reply,"sectRecoveryEmail");
+		callApi("users/details",(ok,reply) => {
+			if (!ok) return def_errMsg("Failed to re-read user data",reply,"sectRecoveryEmail");
+			catch_user_data(reply);
 			user_info();
 			elm.userSpace.innerHTML = userDetails();
-			size_one_space();
-			}
-		else {
-			if ("error" in reply) msg=reply["error"]; else msg="Failed";
-			return regErr(msg);
-			}
+			errMsg("Recovery Email Address Updated","sectRecoveryEmail");
+			});
+		}, { json: {"email":e.value} });
+
+	return false;
+}
+
+
+
+function postUserPassword()
+{
+	let vals={},e={};
+	["npw_old_password","npw_new_password","npw_confirm_password"].forEach((item) => {
+		e[item] = document.getElementById(item);
+		vals[item] = e[item].value;
+		});
+
+	function regErr(err,item) { errMsg(err,"sectUserPassword"); item.focus(); return false; }
+
+	if (!vals.npw_old_password) return regErr("Password missing",e.npw_old_password);
+	if (!vals.npw_new_password) return regErr("New password missing",e.npw_new_password);
+	if (!vals.npw_confirm_password) return regErr("Confirm password missing",e.npw_confirm_password);
+
+	if (vals.npw_new_password != vals.npw_confirm_password)
+		return regErr("Passwords do not match",e.npw_new_password)
+
+	let data = {
+		"password": vals.npw_old_password,
+		"new_password": vals.npw_new_password,
+		};
+
+	callApi("users/password",(ok,reply) => {
+		if (!ok) return def_errMsg("Password change failed",reply,"sectUserPassword");
+		errMsg("Password changed","sectUserPassword");
 		}, { json: data });
 
 	return false;
@@ -691,16 +712,23 @@ function userDetails()
 		}
 	x += "</td></tr></table>"
 
+    x += settings_header("Change Recovery EMail");
+    x += "<form name=editRecoveryEmail method=post action=# onSubmit='postRecoveryEmail(); return false;'>";
+    x += "<tr><td><table id=sectRecoveryEmail width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
+    x += form_prompt("New Recovery EMail");
+    x += `<input style="width: 300px;" placeholder="New recovery email address" value="${ctx.user.email}" id='new_recovery_email'></td></tr>`;
+    x += "<tr><td colspan=2></td><td align=right>" + btn("postRecoveryEmail()","Change","Change Recovery EMail",135) + "</td></tr>";
+    x += "</table></form></td></tr>";
+
     x += settings_header("Change Your Password");
-    x += "<form name=editUserPassword method=post action=# onSubmit='postUserPassword(); return false;'>";
-    x += "<tr><td><table id=editUserPassword width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
+    x += "<tr><td><table id=sectUserPassword width=100%><colgroup><col width=30%/><col/><col width=10%/></colgroup>";
     x += form_prompt("Current Password");
-    x += `<input style="width: 300px;" autocomplete="current-password" placeholder="Current password" type=password id='password'></td></tr>`;
+    x += `<input style="width: 300px;" autocomplete="current-password" placeholder="Current password" type=password id='npw_old_password'></td></tr>`;
     x += form_prompt("<b>New</b> Password");
-    x += `<input style="width: 300px;" autocomplete="new-password" placeholder="New password" type=password id='new_password'></td></tr>`;
+    x += `<input style="width: 300px;" autocomplete="new-password" placeholder="New password" type=password id='npw_new_password'></td></tr>`;
     x += form_prompt("Confirm <b>New</b> Password");
-    x += `<input style="width: 300px;" autocomplete="new-password" placeholder="Confirm New Password" type=password id='confirm_password'></td></tr>`;
-    x += "<tr><td colspan=2></td><td align=right><input style='width: 135px;' type=submit class=myBtn value='Change'></td></tr>";
+    x += `<input style="width: 300px;" autocomplete="new-password" placeholder="Confirm New Password" type=password id='npw_confirm_password'></td></tr>`;
+    x += "<tr><td colspan=2></td><td align=right>" + btn("postUserPassword()","Change","Change your password",135) + "</td></tr>";
     x += "</table></form></td></tr>";
 
 	if ((ctx.user.user)&&(ctx.user.user!=policy("manager_account"))) {

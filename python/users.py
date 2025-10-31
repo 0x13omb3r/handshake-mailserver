@@ -90,9 +90,20 @@ def check_session(session_code, user_agent):
     return True, user_data
 
 
+PASSWORD_WEB = {
+    "password": [True, validation.is_password_valid],
+    "new_password": [True, validation.is_password_valid]
+}
+
+
 def check_password(user, sent_data):
+    ok, reply = validation.web_validate(sent_data, PASSWORD_WEB)
+    if not ok:
+        return False, reply
+
     ok, user_data = uconfig.load(user)
-    return compare_passwords(sent_data["password"], user_data["password"])
+    return compare_passwords(sent_data["password"],
+                             user_data["password"]), "Password match failed"
 
 
 def logout(session_code, user, user_agent):
@@ -139,11 +150,29 @@ def request_password_reset(user, sent_data):
     return True, None
 
 
+
+EMAIL_WEB = {
+    "email": [True, validators.email]
+    }
+
+def update_email(user, sent_data):
+    if user is None:
+        return False, "Not logged in"
+
+    ok, reply = validation.web_validate(sent_data, EMAIL_WEB)
+    if not ok:
+        return False, reply
+
+    uconfig.update(user, {"email": sent_data["email"]})
+    return True, None
+
+
+
 REGISTER_WEB = {
     "user": [True, validation.web_valid_new_account],
     "email": [True, validators.email],
-    "password": [True, None],
-    "confirm": [True, None]
+    "password": [True, validation.is_password_valid],
+    "confirm": [True, validation.is_password_valid]
 }
 
 
@@ -224,8 +253,8 @@ def valid_reset_code(code):
 PASSWORD_RESET_WEB = {
     "code": [True, valid_reset_code],
     "pin": [True, valid_reset_pin],
-    "confirm": [True, None],
-    "password": [True, None]
+    "confirm": [True, validation.is_password_valid],
+    "password": [True, validation.is_password_valid]
 }
 
 

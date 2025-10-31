@@ -33,6 +33,12 @@ reserved_account_names[policy.get("manager_account")] = True
 reserved_account_names["postmaster"] = True
 
 
+def is_password_valid(data):
+    if data is None or not isinstance(data, str) or len(data) < 3:
+        return False
+    return True
+
+
 def user_already_has_reset(user):
     if not is_valid_account(user):
         return True
