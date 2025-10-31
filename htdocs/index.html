@@ -490,7 +490,7 @@ function router_reset_password(params)
 	x += "<tr><th colspan=2>Reset Your Password</th></tr>";
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
 	x += `<input type=hidden name=reset_code value='${params[0]}'>`;
-	x += '<tr><td class=formPrompt>&nbsp;Reset PIN Number:&nbsp;</td><td><input onkeyUp="keyEsc(event);" style="width: 100px;" id="reset_pin">&nbsp;</td></tr>';
+	x += '<tr><td class=formPrompt>&nbsp;Reset Security Code:&nbsp;</td><td><input onkeyUp="keyEsc(event);" style="width: 100px;" id="reset_pin">&nbsp;</td></tr>';
 	x += '<tr><td class=formPrompt>&nbsp;Password:&nbsp;</td><td><input autocomplete="new-password" onkeyUp="keyEsc(event);" style="width: 250px;" type=password id="reset_password">&nbsp;</td></tr>';
 	x += '<tr><td class=formPrompt>&nbsp;Confirm:&nbsp;</td><td><input autocomplete="new-password" onkeyUp="keyEsc(event);" style="width: 250px;" type=password id="reset_confirm">&nbsp;</td></tr>';
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
@@ -519,8 +519,8 @@ function do_reset_password()
 		};
 
 	if (send_json.code.length != 43) { go_welcome_page(); return false; }
-	if (send_json.pin.length != 4) {
-		errMsg("Invalid PIN Number");
+	if (send_json.pin.length != 6) {
+		errMsg("Invalid Security Code");
 		document.resetPass.reset_pin.focus();
 		document.resetPass.reset_pin.select();
 		return false;
@@ -844,7 +844,7 @@ function submit_resend()
 
 		elm.userSpace.innerHTML = "<h2>Reset request processed</h2><P>"
 			+"<center>If a matching account has been found<br>you will receive an email with a reset link<P>"
-			+`<P>Don't forget you will need your PIN number<P><h2>${send_json.pin}</h2></center>`;
+			+`<P>Don't forget you will need your Security Code<P><h2>${send_json.pin}</h2></center>`;
 
 		},{ json: send_json });
 
@@ -856,13 +856,13 @@ function resend_password(with_push)
 {
 	if (with_push) push_hist("resend_password");
 	hideAllPopUp()
-	pin_code = (Math.trunc(Math.random()*1000000)).toString().slice(-4);
+	pin_code = (Math.trunc(Math.random()*100000000)).toString().slice(-6);
 	let x = "<form name=resendPass action=# method=post onSubmit='return submit_resend();'><table width=65% id='resend_table' align=center border=0>";
 	x += settings_header("Reset Password",true);
 	x += "<tr><td>Enter your account name below and we will email you a link to reset your password</td></tr>";
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
-	x += "<tr><Td style='white-space: normal;'>When you click the password reset link in the email, you will be asked for the PIN number shown below. ";
-	x += "<br>You will <B>NOT</b> be able to reset your password without this PIN Number</td></tr>"
+	x += "<tr><Td style='white-space: normal;'>When you click the password reset link in the email, you will be asked for the Security Code shown below. ";
+	x += "<br>You will <B>NOT</b> be able to reset your password without this Security Code</td></tr>"
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";
 	x += `<tr><td><h2>${pin_code}</h2></td></tr>`;
 	x += "<tr><td colspan=2>"+gbl.gap+"</td></tr>";

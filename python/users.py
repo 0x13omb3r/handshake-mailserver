@@ -105,7 +105,7 @@ def logout(session_code, user, user_agent):
 
 
 def valid_reset_pin(pin):
-    if not isinstance(pin, str) or len(pin) != 4 or not pin.isdecimal():
+    if not isinstance(pin, str) or len(pin) != 6 or not pin.isdecimal():
         return False, "Invalid PIN"
     return True, None
 
@@ -120,7 +120,6 @@ def request_password_reset(user, sent_data):
     if user is not None:
         return False, "You are already logged in"
 
-    log.debug(f"request_password_reset:: {user}: {sent_data} - {validation.user_already_has_reset(sent_data.get("user", None))}")
     ok, reply = validation.web_validate(sent_data, PASSWORD_REQUEST_WEB)
     if not ok:
         return False, reply
