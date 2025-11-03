@@ -52,6 +52,8 @@ def user_already_has_reset(user):
 
 
 def is_valid_email(email):
+    if email.find("@") <= 0:
+        return False
     name, dom = email.rstrip(".").lower().split("@")
     if not is_valid_account(dom):
         return False

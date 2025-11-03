@@ -1,0 +1,10 @@
+#! /bin/sh
+
+tmp=$(mktemp /run/exec/doms/manual_XXXXXX)
+if test "${2}"
+	then
+		echo "{\"verb\":\"$1\",\"data\":$2}"
+	else
+		echo "{\"verb\":\"$1\"}"
+	fi > ${tmp}
+chmod 444 ${tmp}

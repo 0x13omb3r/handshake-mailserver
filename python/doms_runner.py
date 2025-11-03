@@ -595,6 +595,7 @@ def main():
         run_tests()
 
     else:
+        log.debug("Starting doms runner")
         runner(args.debug, args.syslog)
 
 

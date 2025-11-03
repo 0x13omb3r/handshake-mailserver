@@ -6,4 +6,4 @@ session_expiry=$(expr $(/usr/local/python/policy.py session_expiry) / 30)
 
 find ${BASE}/service/sessions -mmin +${session_expiry} -type f -delete
 
-/usr/local/python/executor.py -t doms -v run_mx_check
+/usr/local/bin/exec_doms run_mx_check

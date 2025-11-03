@@ -5,6 +5,41 @@ namespace RainLoop;
 use RainLoop\Enumerations\UploadError;
 use RainLoop\Enumerations\UploadClientError;
 
+
+class RestApi
+{
+	private function rest_api($url_in, array $data = NULL)
+	{
+		$server = "http://127.0.0.1:8080/internal/";
+		$url = $server. $url_in;
+
+		$curl = curl_init();
+
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Accept: application/json', 'Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($curl, CURLOPT_TIMEOUT, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
+
+		$result = curl_exec($curl);
+		curl_close($curl);
+		return $result;
+	}
+
+	public function check_sender_address($user, $email)
+	{
+		$res_curl = $this->rest_api("check/sender",array('user' => $user, 'email' => $email));
+		$out = json_decode($res_curl);
+		/*
+		\shell_exec("/usr/local/bin/log_this '" . $res_curl . "'");
+		\shell_exec("/usr/local/bin/log_this '" . $out->{'result'} . "'");
+		*/
+		return $out->{'result'};
+	}
+
+}
+
+
 class Actions
 {
 	const AUTH_TFA_SIGN_ME_TOKEN_KEY = 'rltfasmauth';
@@ -6165,8 +6200,9 @@ NewThemeLink IncludeCss LoadingDescriptionEsc LangLink IncludeBackground Plugins
 					$this->Plugins()->RunHook('filter.smtp-hidden-rcpt', array($oAccount, $oMessage, &$aHiddenRcpt));
 				}
 
-				$out = \shell_exec("/usr/local/python/from_email_allowed.py -e '" . \base64_encode($sFrom) . "' -u '" . \base64_encode($oAccount->Login()) . "'");
-				if ($out != "OK")  { throw new \RainLoop\Exceptions\ClientException(\RainLoop\Notifications::CantSendMessage); }
+				$rest_api = new RestApi();
+				$out = $rest_api->check_sender_address($oAccount->Login(), $sFrom);
+				if ($out != "OK") { throw new \RainLoop\Exceptions\ClientException(\RainLoop\Notifications::CantSendMessage); }
 
 				$bUsePhpMail = $oAccount->Domain()->OutUsePhpMail();
 

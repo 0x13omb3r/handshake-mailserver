@@ -1,8 +1,11 @@
 #! /bin/sh
 
 idents="$1"
-acct="$2"
+user="$2"
 
-/usr/local/python/executor.py -t doms \
-	-v identity_changed \
-	-d "{ \"identities\": \"${idents}\", \"user\":\"${acct}\" }"
+verb="identity_changed"
+data="{ \"identities\": \"${idents}\", \"user\":\"${user}\" }"
+
+tmp=$(mktemp /run/exec/doms/manual_XXXXXX)
+echo "{\"verb\":\"${verb}\",\"data\":${data}}" > ${tmp}
+chmod 444 ${tmp}

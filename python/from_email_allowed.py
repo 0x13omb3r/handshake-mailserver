@@ -12,7 +12,7 @@ from policy import this_policy as policy
 def is_allowed_email(in_user, in_email):
     if not validation.is_valid_account(
             in_user) or not validation.is_valid_email(in_email):
-        return False, "Failed basic valiadation"
+        return False, "Failed: basic valiadation"
 
     user = in_user.rstrip('.').lower()
     frm, dom = in_email.split("@")
@@ -20,20 +20,20 @@ def is_allowed_email(in_user, in_email):
 
     ok, user_data = uconfig.load(user, with_events=False)
     if not ok:
-        return False, "load user"
+        return False, "Failed: load user"
 
     if not misc.is_user_active(user_data):
-        return False, "misc.is_user_active"
+        return False, "Failed: misc.is_user_active"
 
     email_domain = policy.get("email_domain").rstrip(".").lower()
     if dom == email_domain and frm == user:
         return True, "default address"
 
     if "identities" not in user_data or email not in user_data["identities"]:
-        return False, "not an identity"
+        return False, "Not an active identity"
 
     if not misc.is_email_active(user_data, email):
-        return False, "misc.is_email_active"
+        return False, "Failed: misc.is_email_active"
 
     return True, None
 

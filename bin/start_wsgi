@@ -1,0 +1,20 @@
+#! /bin/sh
+# (c) Copyright 2019-2022, James Stevens ... see LICENSE for details
+# Alternative license arrangements are possible, contact me for more information
+
+. /usr/local/bin/inc
+this_service="$1"
+if test -z "$1"; then logger -t "wsgi_starter" "ERROR: No service specified"; exit 1; fi
+
+sessions=$(jq .${this_service}_sessions < ${BASE}/service/config/policy.json)
+if test -z "${sessions}" -o "${sessions}" = "null"; then sessions="3"; fi
+
+log_lvl="info"
+log_fac="local7"
+logging="--log-syslog --log-syslog-facility ${log_fac} --log-level ${log_lvl}"
+
+cd ${PYBASE}
+
+exec gunicorn --workers ${sessions} \
+	--user=service --group=service ${logging} --bind unix:/run/wsgi_${this_service}.sock \
+	run_${this_service} 2>&1 | logger -p ${log_fac}.${log_lvl} -t ${this_service}

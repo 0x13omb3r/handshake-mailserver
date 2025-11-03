@@ -1,4 +1,4 @@
 #! /bin/sh
 
 . /usr/local/bin/inc
-/usr/local/python/executor.py -t doms -v user_age_check
+/usr/local/bin/exec_doms user_age_check

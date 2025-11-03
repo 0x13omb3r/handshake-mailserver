@@ -55,6 +55,9 @@ class Policy:
         self.all_data = None
         self.merge_policy_data()
 
+        with open("/usr/local/etc/build.txt", "r") as fd:
+            self.all_data["build"] = fd.readline().strip()
+
     def merge_policy_data(self):
         self.all_data = DEFAULT_POLICY_VALUES.copy()
         self.all_data.update(self.file.data())

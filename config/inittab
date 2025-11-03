@@ -8,4 +8,5 @@
 ::respawn:/usr/sbin/nginx -g "daemon off;" >/dev/null 2>&1
 ::respawn:/usr/local/python/root_runner.py -S
 ::respawn:/usr/local/bin/start_doms_runner
-::respawn:/usr/local/bin/start_wsgi_webui
+::respawn:/usr/local/bin/start_wsgi webui
+::respawn:/usr/local/bin/start_wsgi internal

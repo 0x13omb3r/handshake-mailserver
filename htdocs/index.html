@@ -436,6 +436,7 @@ function changeFavicon(src)
 }
 
 
+
 function go_welcome(with_push)
 {
 	pre_get_elm.forEach(i => { elm[i] = document.getElementById(i); } );
@@ -451,11 +452,12 @@ function go_welcome(with_push)
 		if (ctx.policy) gbl.config = {"policy":ctx.policy};
 
 		let my_icon = policy("icon","milkshake.png");
-		let site_name = policy("website_title","Web Mail");
-		document.title = site_name;
+		let website_title = policy("website_title","Web Mail");
+		let this_build = policy("build","");
+		document.title = website_title;
 		changeFavicon("/icons/"+my_icon)
-		site_name = `<img height=32 style="vertical-align:bottom" src="/icons/${my_icon}">&nbsp;${site_name}`;
-		elm.businessName.innerHTML = `<a href="https://${policy('website_domain')}/">${site_name}</a>`;
+		site_name = `<img height=32 style="vertical-align:bottom" src="/icons/${my_icon}">&nbsp;${website_title}`;
+		elm.businessName.innerHTML = `<a title="${website_title}: ${this_build}" href="https://${policy('website_domain')}/">${site_name}</a>`;
 
         if (ctx.session) {
             callApi("users/details",(ok,reply) => {

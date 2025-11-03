@@ -34,7 +34,8 @@ RUN apk add jq
 
 
 COPY etc /usr/local/etc/
-RUN mkdir -p /usr/local/etc/uid
+RUN mkdir -p /usr/local/etc/uid /usr/local/nothing
+RUN touch /usr/local/nothing/index.html
 RUN chmod 750 /usr/local/etc/uid
 RUN cp -a /etc/passwd /etc/shadow /etc/group /usr/local/etc/uid
 RUN chmod 640 /usr/local/etc/uid/*
@@ -67,4 +68,5 @@ COPY python /usr/local/python
 RUN rm -rf /usr/local/python/.style.yapf /usr/local/python/pyproject.toml /usr/local/python/.ruff_cache
 RUN python3 -m compileall /usr/local/python
 
+RUN /usr/local/setup/make_build
 CMD [ "/usr/local/bin/run_init" ]

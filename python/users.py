@@ -150,10 +150,8 @@ def request_password_reset(user, sent_data):
     return True, None
 
 
+EMAIL_WEB = {"email": [True, validators.email]}
 
-EMAIL_WEB = {
-    "email": [True, validators.email]
-    }
 
 def update_email(user, sent_data):
     if user is None:
@@ -165,7 +163,6 @@ def update_email(user, sent_data):
 
     uconfig.update(user, {"email": sent_data["email"]})
     return True, None
-
 
 
 REGISTER_WEB = {
