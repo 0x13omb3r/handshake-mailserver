@@ -57,7 +57,7 @@ def make_home_dir(data):
 
 
 def install_system_files(data):
-    for file in ["transport", "virtual"]:
+    for file in ["transport", "local", "virtual"]:
         pfx = os.path.join(policy.BASE, "postfix", "data", file)
         new = pfx + ".new"
         if os.path.isfile(new):

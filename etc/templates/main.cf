@@ -34,6 +34,6 @@ shlib_directory = /usr/lib/postfix
 smtpd_tls_cert_file = /run/pems/server.pem
 smtpd_tls_key_file = /run/pems/server.pem
 
-mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain, {{ policy.email_domain }}
+mydestination = lmdb:/opt/data/postfix/data/local
 
 smtpd_tls_security_level = may
