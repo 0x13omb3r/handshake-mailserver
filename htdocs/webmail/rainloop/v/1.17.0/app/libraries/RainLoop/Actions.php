@@ -18,7 +18,7 @@ class RestApi
 		curl_setopt($curl, CURLOPT_URL, $url);
 		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Accept: application/json', 'Content-Type: application/json'));
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($curl, CURLOPT_TIMEOUT, 1);
+		curl_setopt($curl, CURLOPT_TIMEOUT, 4);
 		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
 
 		$result = curl_exec($curl);
