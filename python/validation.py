@@ -34,9 +34,7 @@ reserved_account_names["postmaster"] = True
 
 
 def is_password_valid(data):
-    if data is None or not isinstance(data, str) or len(data) < 3:
-        return False
-    return True
+    return data is not None and isinstance(data, str) and len(data) > 2
 
 
 def user_already_has_reset(user):
@@ -57,8 +55,10 @@ def is_valid_email(email):
     name, dom = email.rstrip(".").lower().split("@")
     if not is_valid_account(dom):
         return False
+
     tld = dom.split(".")[-1]
-    if tld in icann_tlds.ICANN_TLDS and not policy.get("allow_icann_domains"):
+    email_domain = policy.get("email_domain").rstrip(".").lower()
+    if dom != email_domain and tld in icann_tlds.ICANN_TLDS and not policy.get("allow_icann_domains"):
         return False
     return re.match(IS_EMAIL, name, re.IGNORECASE) is not None
 

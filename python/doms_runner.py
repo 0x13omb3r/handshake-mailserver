@@ -254,6 +254,14 @@ class UserData:
                 for tld in icann_tlds.ICANN_TLDS:
                     fd.write(f".{tld}:     smtp: [{icann_smtp_relay}]\n")
 
+        pfx = os.path.join(policy.BASE, "postfix", "data", "local")
+        with open(pfx + ".tmp", "w") as fd:
+            fd.write(f"{email_domain} OK\n")
+            for user in self.active_users:
+                doms = self.all_users[user]["domains"]
+                for dom in [d for d in doms if doms[d]]:
+                    fd.write(f"{dom} OK\n")
+
         pfx = os.path.join(policy.BASE, "postfix", "data", "virtual")
         with open(pfx + ".tmp", "w") as fd:
             fd.write(f"manager@{email_domain} manager\n")
@@ -281,7 +289,7 @@ class UserData:
                 }, fd)
         os.replace(policy.DOMAINS_FILE + ".tmp", policy.DOMAINS_FILE)
 
-        for file in ["transport", "virtual"]:
+        for file in ["transport", "local", "virtual"]:
             pfx = os.path.join(policy.BASE, "postfix", "data", file)
             os.replace(pfx + ".tmp", pfx + ".new")
 

@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 
 import argparse
-import base64
 
 import misc
 import uconfig
@@ -46,12 +45,9 @@ def main():
     parser.add_argument("-D", '--debug', action="store_true")
     args = parser.parse_args()
 
-    email = base64.b64decode(args.email).decode("utf-8")
-    user = base64.b64decode(args.user).decode("utf-8")
-
-    ok, reply = is_allowed_email(user, email)
+    ok, reply = is_allowed_email(args.user, args.email)
     if args.debug:
-        print("Final answer:", user, email, "=", ok, "-", reply)
+        print("Final answer:", args.user, args.email, "=", ok, "-", reply)
 
     if ok:
         print("OK", end="")
