@@ -29,7 +29,8 @@ RUN apk add stunnel busybox-extras cyrus-sasl imap
 RUN apk add ldns-tools openssl
 RUN apk add python3 py3-jinja2 py3-passlib py3-flask py3-filelock
 RUN apk add py3-validators py3-idna py3-gunicorn py3-dnspython
-RUN apk add php84-fpm php84-curl php84-iconv php84-dom
+RUN apk add php84-fpm php84-curl php84-iconv php84-dom php84-pdo_sqlite php84-sqlite3
+
 RUN apk add jq
 
 
@@ -57,6 +58,7 @@ COPY config/php-fpm.conf /etc/php84/php-fpm.conf
 COPY config/www.conf /etc/php84/php-fpm.d/www.conf
 COPY config/default.conf /etc/nginx/http.d/default.conf
 COPY config/nginx.conf /etc/nginx/nginx.conf
+RUN cp /etc/php84/php.ini etc/php84/php.orig
 COPY config/php.ini /etc/php84/php.ini
 COPY cron /usr/local/cron/
 COPY cron/root /var/spool/cron/crontabs/root
