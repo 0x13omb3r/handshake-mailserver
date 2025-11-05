@@ -2,7 +2,7 @@
 
 if ! python3 -m compileall python; then exit 1; fi
 
-cd etc/default_config
+cd default_config
 tar zcf ../default_config.tgz .
 cd -
 
