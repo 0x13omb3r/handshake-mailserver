@@ -1,9 +1,9 @@
 #! /bin/sh
 
+#	--read-only \
 ip="192.168.1.144"
 docker run \
 	-m 1g \
-	--read-only \
 	--env DEBUG_MODE=Y \
 	--env SYSLOG_STDOUT=Y \
 	--dns 192.168.8.110 \
