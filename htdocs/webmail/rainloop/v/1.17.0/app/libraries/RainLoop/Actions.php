@@ -30,11 +30,13 @@ class RestApi
 	{
 		$res_curl = $this->rest_api("check/sender",array('user' => $user, 'email' => $email));
 		$out = json_decode($res_curl);
+
 		/*
 		\shell_exec("/usr/local/bin/log_this '" . $res_curl . "'");
 		\shell_exec("/usr/local/bin/log_this '" . $out->{'result'} . "'");
 		*/
-		return $out->{'result'};
+
+		return ($out->{'result'} === "OK");
 	}
 
 }
@@ -6201,8 +6203,9 @@ NewThemeLink IncludeCss LoadingDescriptionEsc LangLink IncludeBackground Plugins
 				}
 
 				$rest_api = new RestApi();
-				$out = $rest_api->check_sender_address($oAccount->Login(), $sFrom);
-				if ($out != "OK") { throw new \RainLoop\Exceptions\ClientException(\RainLoop\Notifications::CantSendMessage); }
+				if (!$rest_api->check_sender_address($oAccount->Login(), $sFrom)) { 
+					throw new \RainLoop\Exceptions\ClientException(\RainLoop\Notifications::CantSendMessage);
+					}
 
 				$bUsePhpMail = $oAccount->Domain()->OutUsePhpMail();
 
