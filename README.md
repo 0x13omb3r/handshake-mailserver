@@ -79,7 +79,7 @@ When the manager logs into the registration site, they should not only get the â
 				-p ${ip_pb}:80:80 \
 				-it handshake-mailserver
 
-In this exmaple, I have disk space on the container host at `/opt/data/handshake-mailserver`, so I am mapping
+In this example, I have disk space on the container host at `/opt/data/handshake-mailserver`, so I am mapping
 this into the container for it to use as storage.
 
 NOTE: this container is designed to run read-only. This improves security, so I recommend you also use this option.
