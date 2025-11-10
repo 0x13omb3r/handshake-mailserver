@@ -29,7 +29,9 @@ function welcome_text()
 function user_help()
 {
 	return `
-<!--- User Help --->
+
+<!--- User Help - you MUST retain this comment, it's used for technical reasons --->
+
 <table align=center width=75%>
 <tr><th><h2>User Help</h2></th></tr>
 <tr><th>Getting Started</th></tr>
