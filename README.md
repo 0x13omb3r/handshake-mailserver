@@ -14,7 +14,7 @@ All you need for running this container is a server running docker & some disk s
 
 The basic procedure is, run the container once, customise the default configuration then restart it and you're ready to go.
 
-When you get docker to run the container you will need to map your disk space to the container's directory “/opt/data” and you will need to use the docker option `--dns` to specify which Handshake-aware DNS servers you want it to use.
+When you get docker to run the container you will need to map your disk space to the container's directory `/opt/data` and you will need to use the docker option `--dns` to specify which Handshake-aware DNS servers you want it to use.
 
 It is also common for mail servers to like to see the hostname and IP Address mail is sent from match each other. They also like the reverse DNS on the IP Address to match the host name. You can use the docket option `--hostname <name>` to specify the host name within the container.
 
