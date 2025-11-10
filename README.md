@@ -16,7 +16,7 @@ The basic procedure is, run the container once, customise the default configurat
 
 When you get docker to run the container you will need to map your disk space to the container's directory `/opt/data` and you will need to use the docker option `--dns` to specify which Handshake-aware DNS servers you want it to use.
 
-It is also common for mail servers to like to see the hostname and IP Address mail is sent from match each other. They also like the reverse DNS on the IP Address to match the host name. You can use the docket option `--hostname <name>` to specify the host name within the container.
+It is also common for mail servers to like to see the hostname and IP Address mail is sent from match each other. They also like the reverse DNS on the IP Address to match the host name. You can use the docker option `--hostname <name>` to specify the host name within the container.
 
 ## SSL Security
 When running the container, you can either get the container to handle the SSL, or you can do it externally, e.g. using `nginx`, `haproxy` etc.
@@ -43,7 +43,7 @@ If you do not provide a `server.pem` file, the system will make one using an eph
 
 
 ## Custom Configuration
-After you have run the container once, it should have created the file `{{DATA}}/service/config/policy.json` - it will container the system default values.
+After you have run the container once, it should have created the file `{{DATA}}/service/config/policy.json` - it will containe the system default values.
 
 You will definitely need to change `email_domain` and `website_domain` to match the domain you plan to use for your site. You will also probably want to change `website_title`, which is the title on the web pages.
 
@@ -63,9 +63,10 @@ The account for the person who manages the system is “manager”, by default. 
 The manager has three access points, the registration site, their email account and the interface for customising the webmail interface.
 When the system sends emails to the users, they will always come from the "manager" account.
 
-The password for the registration site and the mailbox are managed together, but the password for customising the webmail interface is manager separately in Rainloop. This means you will need to change the password in two places – the registration interface and the Rainloop Admin interface.
+The password for the registration site and the mailbox are managed together, but the password for customising the webmail interface is managed separately in Rainloop. This means you will need to change the password in two places – the registration interface and the Rainloop Admin interface.
+You can have two different passwords for these two environments, if you wish.
 
-When the manager logs into the registration site, they should not only get the “Webmail” button like normal users do, but an additional button labelled “Mail Admin” which takes them to the Rainloop Admin interface.
+When the manager logs into the registration site, they should not only get the “WebMail” button like normal users do, but an additional button labelled “Mail Admin” which takes them to the Rainloop Admin interface.
 
 ## Example Run Script
 
