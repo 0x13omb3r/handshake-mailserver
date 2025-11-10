@@ -83,4 +83,4 @@ this into the container for it to use as storage.
 
 NOTE: this container is designed to run read-only. This improves security, so I recommend you also use this option.
 
-`${ip_pb}` is a variable that hold the container host's IP Address I am using for this container.
+`${ip_pb}` is a variable that holds the container host's IP Address I am using for this container.
