@@ -61,6 +61,7 @@ Once you have edited the `policy.json` file, restart the container and you are r
 The account for the person who manages the system is “manager”, by default. If you wish to change this I STRONGLY recommend you do it at the very beginning. The default password is “12345”, I even more strongly, recommend you change this.
 
 The manager has three access points, the registration site, their email account and the interface for customising the webmail interface.
+When the system sends emails to the users, they will always come from the "manager" account.
 
 The password for the registration site and the mailbox are managed together, but the password for customising the webmail interface is manager separately in Rainloop. This means you will need to change the password in two places – the registration interface and the Rainloop Admin interface.
 
@@ -84,3 +85,11 @@ this into the container for it to use as storage.
 NOTE: this container is designed to run read-only. This improves security, so I recommend you also use this option.
 
 `${ip_pb}` is a variable that holds the container host's IP Address I am using for this container.
+
+Customising the Build
+
+If you wish to customise the build, the text of the welcome & help page is held in the file [htdocs/text.js](htdocs/text.js)
+making it easy to replace this text with whatever you want.
+
+All the default email templates are copied into `{{DATA}}/service/emails/*.eml`, so you can edit / replace them there.
+The common header & footer are `start.inc` & `end.inc` respectively.
