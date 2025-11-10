@@ -215,7 +215,7 @@ function activate_account_instructions()
 	let my_gap = "<div style='height: 20px;'></div>";
 
 	let x = "<table width=75% align=center border=0>";
-	x += settings_header(`Welcome to the ${gbl.config.policy.website_title} Service`);
+	x += settings_header(`Welcome to the ${policy("website_title")} Service`);
 	x += `<tr><td style="white-space: normal">`;
 	x += `As of right now, your <b>${ctx.user.user}</b> account is not yet activated. You will NOT be able to use the email service until you activate your account. `;
 	x += `To activate this account you must add a DNS MX record into the domain <b>${ctx.user.user}</b>. It will need to look like this<p>`
