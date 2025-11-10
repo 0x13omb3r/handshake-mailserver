@@ -49,7 +49,7 @@ You will definitely need to change `email_domain` and `website_domain` to match 
 
 You may wish to change `manager_account` which is the name of the site manager's account – the default is `manager`. This can be harder to change once the site has been up and running a while.
 
-All the items that start “cert_site_” are only for creating the private certificate described above.
+All the items that start `cert_site_` are only for creating the private certificate described above.
 
 The item `allow_icann_domains` is a boolean (true/false) that says whether users can register on the site using an ICANN domain name. By default is this `false`, which means the site will only support registration of Handshake domain names.
 
