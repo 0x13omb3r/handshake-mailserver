@@ -10,7 +10,7 @@ If you don't want to build the container yourself, it is available on [docker.co
 There is a free public Handshake email service, using this container, at [https://ShakeTheMail.net/](https://ShakeTheMail.net/).
 
 ## Running this Container
-All you need for running this container is a server running docker & some disk space. You will also need to know the IP Address(es) of an open dns resolver that support Handshake.
+All you need for running this container is a server running docker & some disk space. You will also need to know the IP Address(es) of an open dns resolver that supports resolving Handshake domains.
 
 The basic procedure is, run the container once, customise the default configuration then restart it and you're ready to go.
 
