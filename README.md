@@ -19,7 +19,7 @@ When you get docker to run the container you will need to map your disk space to
 It is also common for mail servers to like to see the hostname and IP Address mail is sent from match each other. They also like the reverse DNS on the IP Address to match the host name. You can use the docket option `--hostname <name>` to specify the host name within the container.
 
 ## SSL Security
-When running the container, you can either get the container to handle the SSL, or you can do it externally, e.g. using nginx, haproxy etc.
+When running the container, you can either get the container to handle the SSL, or you can do it externally, e.g. using `nginx`, `haproxy` etc.
 
 If you do it internally, you will need to copy a PEM file into `{{DATA}}/pems/server.pem` - the file must contain both the private key PEM and the certificate PEM. The container will look for this file getting updated and will automatically install the new certificate and tell the internal software to update.
 
