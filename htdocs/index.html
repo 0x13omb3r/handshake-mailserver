@@ -2,6 +2,7 @@
 <head>
 	<title>Python Registrar</title>
 	<meta charSet="utf-8"/>
+	<script src="/text.js"></script>
 	<script src="/theme.js"></script>
 	<script src="/punycode.js"></script>
 	<script src="/lib.js"></script>
@@ -179,6 +180,7 @@ function show_one_space(name)
 		if (item != name) elm[item].style.display = "none";
 		};
 	elm[name].style.display = "block";
+	if (name=="default") elm[name].innerHTML = welcome_text();
 }
 
 function size_one_space() { setTimeout(do_size_one_space,250); }
@@ -1027,27 +1029,7 @@ function make_theme_popup()
 <div style="height: 100px;">&nbsp;</div>
 
 <div id="allBottom">
-	<span class="botSpace" id="default" style="display: none;">
-		<table align=center width=75%><tr><Th><h2>Welcome</h2></th></tr>
-		<tr><td><div style='height: 20px;'></div></td></tr>
-		<tr><td style="white-space: normal">
-		Welcome to a Handshake-aware WebMail Service. Using this service you can send and receive emails between email addresses in any Handshake Domain.
-		You can also send email to ICANN domains, if their SMTP Server uses an Handshake-aware DNS resolver.
-		<div style='height: 20px;'></div>
-		To use this service, you must
-		<li> Own a Handshake Domain and be able to configure it's DNS
-		<li> Register to use the domain on this site
-		<li> Add a DNS MX record we give you to  prove you own the domain and direct your email to this service
-		<P>
-		<div style='height: 20px;'></div>
-		You will be able to read your email through this website, by SSL-IMAP or SSL-POP3.
-		You can send mail to other members of this site using SMTP, but you will only be able to send mail externally (to ICANN or Handshake domains) using the webmail interface. This is to discourage spammers/scammers.
-		<P>
-		If you use IMAP, and store your mail folders on the site, I strongly recommend <a target=_blank href="https://www.google.com/search?q=backup+imap+folders+tool">you arrange to back them up</a>. We offer no guarantees, beyond "best effort".
-		<div style='height: 20px;'></div>
-		To get started, click <b>Register</b> above.
-		</td></tr></table>
-	</span>
+	<span class="botSpace" id="default" style="display: none;"></span>
 	<span class="botSpace" id="userSpace" style="display: none;"></span>
 </div>
 

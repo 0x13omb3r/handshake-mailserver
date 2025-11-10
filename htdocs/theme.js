@@ -93,7 +93,7 @@ function theme_css(theme) {
 	}
 
 .botSpace {
-	min-width: 75%;
+	width: 75%;
 	margin-left: auto;
 	margin-right: auto;
 	background-color: #${cols[4]};
