@@ -3,9 +3,9 @@ This repo contains the code to make a container to run a Handshake Mail service,
 
 NOTE: the SSL/SMTP only allows you to send mail to other members of the same site, but you can send mail to external addresses (both ICANN and Handshake) using the Webmail interface.
 
-You can only send email to an ICANN destination where their mail server uses a Handshake aware resolver, but this normally the only requirement for them to sned & receive email with Handshake.
+You can only send email to an ICANN destination where their mail server uses a Handshake aware resolver, but this is normally the only requirement for them to send & receive email with Handshake.
 
-If you don't want to build the container yourself, it is available on docker.com at jamesstevens/handshake-mailserver (https://hub.docker.com/r/jamesstevens/handshake-mailserver).
+If you don't want to build the container yourself, it is available on [docker.com](https://docker.com) at `jamesstevens/handshake-mailserver` (https://hub.docker.com/r/jamesstevens/handshake-mailserver).
 
 There is a free public Handshake email service, using this container, at [https://ShakeTheMail.net/](https://ShakeTheMail.net/).
 
