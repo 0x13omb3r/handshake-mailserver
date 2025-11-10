@@ -98,4 +98,4 @@ The common header & footer are `start.inc` & `end.inc` respectively.
 
 The registration process is run completely using a rest/api. Currently it is not documented, but you can see all the calls in [python/run_webui.py](python/run_webui.py).
 
-The registration interface provided in this system is simply a single page javascript webapp that calls this rest/api.
+The registration UI provided in this container is simply a single page javascript webapp that calls this rest/api.
