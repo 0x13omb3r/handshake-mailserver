@@ -183,6 +183,21 @@ function show_one_space(name)
 	if (name=="default") elm[name].innerHTML = welcome_text();
 }
 
+
+function show_more_help()
+{
+	hidePopUp();
+	for (let item of ["userSpace","default"]) {
+		if (item != name) elm[item].style.display = "none";
+		};
+	elm.default.style.display = "block";
+    if (elm.default.innerHTML.indexOf("User Help") > 0)
+		elm.default.innerHTML = welcome_text();
+    else
+		elm.default.innerHTML = user_help();
+}
+
+
 function size_one_space() { setTimeout(do_size_one_space,250); }
 function do_size_one_space()
 {
@@ -1006,6 +1021,7 @@ function make_theme_popup()
 <tr><Td>
 <div class="popBelow">
 <span style='width: 85px;' id=themeButton tabindex=0 title="Change theme" class=myBtn onClick="toggleTheme();">Theme</span>
+<span style='width: 85px;' id=themeButton tabindex=0 title="Show Help" class=myBtn onClick="show_more_help();">Help</span>
 <span class="popBelowText" id="themePopup">&nbsp;</span>
 </div>
 </td>
