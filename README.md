@@ -21,7 +21,7 @@ It is also common for mail servers to like to see the hostname and IP Address ma
 ## SSL Security
 When running the container, you can either get the container to handle the SSL, or you can do it externally, e.g. using nginx, haproxy etc.
 
-If you do it internally, you will need to copy a PEM file into {{DATA}}/pems/server.pem – the file must contain both the private key PEM and the certificate PEM. The container will look for this file getting updated and will automatically install the new certificate and tell the internal software to update.
+If you do it internally, you will need to copy a PEM file into `{{DATA}}/pems/server.pem` - the file must contain both the private key PEM and the certificate PEM. The container will look for this file getting updated and will automatically install the new certificate and tell the internal software to update.
 
 If you run the SSL externally, I recommend you proxy the following ports
 
@@ -40,7 +40,7 @@ If you do not provide a `server.pem` file, the system will make one using an eph
 
 
 ## Custom Configuration
-After you have run the container once, it should have created the file {{DATA}}/service/config/policy.json – it will container the system default values.
+After you have run the container once, it should have created the file `{{DATA}}/service/config/policy.json` - it will container the system default values.
 
 You will definitely need to change `email_domain` and `website_domain` to match the domain you plan to use for your site. You will also probably want to change `website_title`, which is the title on the web pages.
 
