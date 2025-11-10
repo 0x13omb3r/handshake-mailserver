@@ -62,3 +62,16 @@ The manager has three access points, the registration site, their email account 
 The password for the registration site and the mailbox are managed together, but the password for customising the webmail interface is manager separately in Rainloop. This means you will need to change the password in two places – the registration interface and the Rainloop Admin interface.
 
 When the manager logs into the registration site, they should not only get the “Webmail” button like normal users do, but an additional button labelled “Mail Admin” which takes them to the Rainloop Admin interface.
+
+## Exmaple Run Script
+
+		exec docker run \
+				--read-only \
+				--hostname mail.shakethemail.net \
+				--dns 192.168.8.110 \
+				-v /opt/data/handshake-mailserver/:/opt/data \
+				-p ${ip_pb}:993:993 -p ${ip_pb}:995:995 \
+				-p ${ip_pb}:25:25 -p ${ip_pb}:465:465 -p ${ip_pb}:587:587 \
+				-p ${ip_pb}:80:80 \
+				-it handshake-mailserver
+
