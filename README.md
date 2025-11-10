@@ -36,6 +36,9 @@ If you run the SSL externally, I recommend you proxy the following ports
 If you are using the container to handle the SSL, then you will need to map the "Public Facing Ports" into the container.
 If you are handling the SSL externally, then you will need to map the "Conainter's Ports" into the container.
 
+You may also want to map port 587 into the container. Even if you are handing the SSL externally, you
+should map port 25 into the container for the benefit of older SMTP servers.
+
 If you do not provide a `server.pem` file, the system will make one using an ephemeral private certificate authority, using the information attributes in the `policy.json` file (see below).
 
 
@@ -63,7 +66,7 @@ The password for the registration site and the mailbox are managed together, but
 
 When the manager logs into the registration site, they should not only get the “Webmail” button like normal users do, but an additional button labelled “Mail Admin” which takes them to the Rainloop Admin interface.
 
-## Exmaple Run Script
+## Example Run Script
 
 		exec docker run \
 				--read-only \
@@ -75,3 +78,7 @@ When the manager logs into the registration site, they should not only get the �
 				-p ${ip_pb}:80:80 \
 				-it handshake-mailserver
 
+In this exmaple, I have disk space on the container host at `/opt/data/handshake-mailserver`, so I am mapping
+this into the container for it to use as storage.
+
+NOTE: this container is designed to run read-only. This improves security, so I recommend you also use this option.
