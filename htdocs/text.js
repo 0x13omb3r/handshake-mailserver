@@ -46,7 +46,7 @@ Once you have registered, you will be given an MX code to put into the apex of y
 <li>1. It proves you own the domain
 <li>2. It directs the email for that domain to this site
 <li>3. Helps us get your mail into your mailbox
-The MX code will look something like this <xmp>qq2pqslz7wfq7qjwedrfedwsqaj63zh2q4cmt23k45rf7y4wfch4.${gbl.config.policy.email_domain}.</xmp>
+The MX code will look something like this <xmp>qq2pqslz7wfq7qjwedrfedwsqaj63zh2q4cmt23k45rf7y4wfch4.${policy("email_domain")}.</xmp>
 In DNS, MX records also require a "priority" number. You can just use "10". Depending on your DNS provider, this may be a prefix to the MX name, or may be entered as a separate field.<P>
 
 <div style='height: 20px;'></div>
@@ -58,7 +58,7 @@ If you log into the registration site, you can click the "Domains" button to see
 
 <tr><th>Adding Email Addresses in Your Domain</th></tr>
 <tr><td style="white-space: normal">
-On Activation, you will have one default email address, [your-domain]@${gbl.config.policy.email_domain}. To add email addresses in your own domain, you will need to log into the webmail interface, at <a target=_blank href="https://${gbl.config.policy.website_domain}/webmail/">https://${gbl.config.policy.website_domain}/webmail/</a><P>
+On Activation, you will have one default email address, [your-domain]@${policy("email_domain")}. To add email addresses in your own domain, you will need to log into the webmail interface, at <a target=_blank href="https://${policy("website_domain")}/webmail/">https://${policy("website_domain")}/webmail/</a><P>
 In the WebMail (provided by Rainloop), go to Settings->Accounts and click the <b>"Add an Identity"</b> button. You can create as many email addresses in your domain as you like. Sending will fail if you try adding email addresses in domains you have not proved you own.<P>
 New identities will show up immediately in the "Domains" page of the registration site.<P>
 <div style='height: 20px;'></div></td></tr>
@@ -89,8 +89,8 @@ If you want to keep your email more private, we recommend you collect the mail o
 
 <tr><th>EMail SPF</th></tr>
 <tr><td style="white-space: normal">
-Some mail servers require a record called "SPF" to be put in the apex of the domain of the sender. You can point to the SPF used for "${gbl.config.policy.email_domain}" by adding the following to your domain.
-<xmp>@   IN   TXT   "v=spf1 mx include:${gbl.config.policy.email_domain} -all"</xmp>
+Some mail servers require a record called "SPF" to be put in the apex of the domain of the sender. You can point to the SPF used for "${policy("email_domain")}" by adding the following to your domain.
+<xmp>@   IN   TXT   "v=spf1 mx include:${policy("email_domain")} -all"</xmp>
 
 </table>`;
 }
