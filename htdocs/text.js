@@ -25,15 +25,11 @@ function welcome_text()
 		</td></tr></table>`;
 }
 
-function show_more_help()
-{
-	elm.default.innerHTML = user_help();
-}
-
 
 function user_help()
 {
 	return `
+<!--- User Help --->
 <table align=center width=75%>
 <tr><th><h2>User Help</h2></th></tr>
 <tr><th>Getting Started</th></tr>
@@ -90,6 +86,11 @@ Your login to the POP3/IMAP services is the domain name you used to create the a
 This site makes no warrantee on retaining your email beyond "best efforts". Therefore, if you chose to store folders on this site(e.g. IMAP or WebMail), we STRONGLY recommend you make suitable arrangements to make backup copies. <a target=_blank href="https://www.google.com/search?q=backup+imap+folders+tool">Various IMAP backup tools are available</a>.<P>
 If you want to keep your email more private, we recommend you collect the mail off the site, using POP3 - or you can simply run a copy of this service yourself.<P>
 <div style='height: 20px;'></div></td></tr>
+
+<tr><th>EMail SPF</th></tr>
+<tr><td style="white-space: normal">
+Some mail servers require a record called "SPF" to be put in the apex of the domain of the sender. You can point to the SPF used for "${gbl.config.policy.email_domain}" by adding the following to your domain.
+<xmp>@   IN   TXT   "v=spf1 mx include:${gbl.config.policy.email_domain} -all"</xmp>
 
 </table>`;
 }
