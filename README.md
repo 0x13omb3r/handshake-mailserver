@@ -86,7 +86,7 @@ NOTE: this container is designed to run read-only. This improves security, so I 
 
 `${ip_pb}` is a variable that holds the container host's IP Address I am using for this container.
 
-##Customising the Build
+## Customising the Build
 If you wish to customise the build, the text of the welcome & help page is held in the file [htdocs/text.js](htdocs/text.js)
 making it easy to replace this text with whatever you want.
 
