@@ -92,3 +92,10 @@ making it easy to replace this text with whatever you want.
 
 All the default email templates are copied into `{{DATA}}/service/emails/*.eml`, so you can edit / replace them there.
 The common header & footer are `start.inc` & `end.inc` respectively.
+
+
+## Configuring an Account from an External System
+
+The registration process is run completely using a rest/api. Currently it is not documented, but you can see all the calls in [python/run_webui.py](python/run_webui.py).
+
+The registration interface provided in this system is simply a single page javascript webapp that calls this rest/api.
