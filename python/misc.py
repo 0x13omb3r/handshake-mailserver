@@ -10,10 +10,16 @@ import base64
 import time
 import os
 
+from policy import this_policy as policy
+
 
 def is_user_active(user_data):
     if (user := user_data.get("user", None)) is None:
         return False
+
+    if user == policy.get("manager_account"):
+        return True
+
     if (doms := user_data.get(
             "domains",
             None)) is None or not isinstance(doms, dict) or user not in doms:

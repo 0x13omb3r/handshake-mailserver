@@ -6,6 +6,7 @@ data_directory = /opt/data/postfix/master
 mail_spool_directory = /opt/data/service/mailboxes
 transport_maps = lmdb:/opt/data/postfix/data/transport
 virtual_alias_maps = lmdb:/opt/data/postfix/data/virtual
+smtp_tls_policy_maps = may
 
 mail_owner = postfix
 mydomain = {{ policy.email_domain }}
