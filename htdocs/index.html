@@ -300,8 +300,7 @@ function user_landing(reply)
 
 function valid_account(user)
 {
-    manager_account = policy("manager_account");
-	return ((fqdnCheck.test(user))||(tldCheck.test(user))||(user==manager_account));
+	return ((fqdnCheck.test(user))||(tldCheck.test(user))||(user==policy("manager_account")));
 }
 
 
@@ -356,7 +355,6 @@ function doLogin()
 
 	let f = document.formLogin;
 	let fqdn = toASCII(f.user.value)
-	manager_account = policy("manager_account");
 	if (!valid_account(fqdn)) return regErr("Invalid login name",f.user);
 
 	let data = { "user":fqdn, "password":f.password.value };
