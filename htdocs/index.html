@@ -298,6 +298,12 @@ function user_landing(reply)
 }
 
 
+function valid_account(user)
+{
+    manager_account = policy("manager_account");
+	return ((fqdnCheck.test(user))||(tldCheck.test(user))||(user==manager_account));
+}
+
 
 
 function doRegister()
@@ -313,7 +319,7 @@ function doRegister()
 	let fqdn = toASCII(f.user.value);
 	if (f.password.value != f.confirm.value) return regErr("Passwords do not match",f.password);
 	if (!valid_email.test(f.email.value)) return regErr("Invalid email address",f.email);
-	if ((!fqdnCheck.test(fqdn))&&(!tldCheck.test(fqdn))) return regErr("Invalid domain name",f.user);
+	if (valid_account(fqdn)) return regErr("Invalid domain name",f.user);
 
 	let data = {
 		"user":fqdn,
@@ -351,8 +357,7 @@ function doLogin()
 	let f = document.formLogin;
 	let fqdn = toASCII(f.user.value)
 	manager_account = policy("manager_account");
-	if ((!fqdnCheck.test(fqdn))&&(fqdn!=manager_account))
-		return regErr("Invalid login name",f.user);
+	if (!valid_account(fqdn)) return regErr("Invalid login name",f.user);
 
 	let data = { "user":fqdn, "password":f.password.value };
 
@@ -877,7 +882,7 @@ function submit_resend()
 		"pin":document.resendPass.pin.value
 		};
 
-	if ((!fqdnCheck.test(send_json.user))&&(!tldCheck.test(send_json.user))) {
+	if (!valid_account(send_json.user)) {
 		errMsg("Account name is invalid",'resend_table');
 		document.resendPass.user.focus();
 		return false;

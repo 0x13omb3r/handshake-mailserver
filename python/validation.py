@@ -197,7 +197,7 @@ def web_valid_new_account(user):
 
 # for testing
 if __name__ == "__main__":
-    print(user_already_has_reset(sys.argv[1]))
+    print(is_valid_account(sys.argv[1]))
 
     # print(sys.argv[1],is_valid_email(sys.argv[1]))
     # print("\n".join(reserved_account_names))
