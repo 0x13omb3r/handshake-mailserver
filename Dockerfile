@@ -31,7 +31,7 @@ RUN apk add python3 py3-jinja2 py3-passlib py3-flask py3-filelock
 RUN apk add py3-validators py3-idna py3-gunicorn py3-dnspython
 RUN apk add php84-fpm php84-curl php84-iconv php84-dom php84-pdo_sqlite
 
-RUN apk add jq
+RUN apk add jq ca-certificates-bundle
 
 
 COPY etc /usr/local/etc/

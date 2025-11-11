@@ -3,8 +3,15 @@
 if ! python3 -m compileall python; then exit 1; fi
 
 cd default_config
-tar zcf ../default_config.tgz .
+tar zcf ../default_config.new .
 cd -
+if ! cmp default_config.new default_config.tgz
+	then
+		mv -v default_config.new default_config.tgz
+	else
+		echo "default_config.tgz unchanged"
+	fi
+rm -fv default_config.new
 
 docker pull alpine:3.22
 docker image build $* -t handshake-mailserver .

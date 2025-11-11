@@ -6,7 +6,6 @@ data_directory = /opt/data/postfix/master
 mail_spool_directory = /opt/data/service/mailboxes
 transport_maps = lmdb:/opt/data/postfix/data/transport
 virtual_alias_maps = lmdb:/opt/data/postfix/data/virtual
-smtp_tls_policy_maps = may
 
 mail_owner = postfix
 mydomain = {{ policy.email_domain }}
@@ -34,7 +33,7 @@ shlib_directory = /usr/lib/postfix
 
 smtpd_tls_cert_file = /run/pems/server.pem
 smtpd_tls_key_file = /run/pems/server.pem
+smtpd_tls_security_level = may
+smtp_tls_security_level = may
 
 mydestination = lmdb:/opt/data/postfix/data/local
-
-smtpd_tls_security_level = may
