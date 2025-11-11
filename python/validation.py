@@ -58,7 +58,8 @@ def is_valid_email(email):
 
     tld = dom.split(".")[-1]
     email_domain = policy.get("email_domain").rstrip(".").lower()
-    if dom != email_domain and tld in icann_tlds.ICANN_TLDS and not policy.get("allow_icann_domains"):
+    if dom != email_domain and tld in icann_tlds.ICANN_TLDS and not policy.get(
+            "allow_icann_domains"):
         return False
     return re.match(IS_EMAIL, name, re.IGNORECASE) is not None
 

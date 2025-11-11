@@ -28,6 +28,10 @@ class RestApi
 
 	public function check_sender_address($user, $email)
 	{
+		/*
+		\shell_exec("/usr/local/bin/log_this '" . $user . ":" . $email . "'");
+		*/
+
 		$res_curl = $this->rest_api("check/sender",array('user' => $user, 'email' => $email));
 		$out = json_decode($res_curl);
 

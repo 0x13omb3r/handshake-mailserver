@@ -6,6 +6,7 @@ import flask
 
 import from_email_allowed
 
+
 application = flask.Flask("internal/api")
 
 
