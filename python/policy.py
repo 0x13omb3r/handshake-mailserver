@@ -19,6 +19,7 @@ DEFAULT_POLICY_VALUES = {
     "never_active_account_expire": 7,
     "was_active_account_expire": 30,
     "manager_account": "manager",
+    "dns_supports_authoritative": False,
     "icann_smtp_relay": None,
     "cert_site_fqdn": "handshake.webmail",
     "cert_site_country": "GB",
