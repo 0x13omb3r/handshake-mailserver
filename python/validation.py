@@ -13,7 +13,6 @@ import resolv
 import uconfig
 import fileloader
 import icann_tlds
-# from log import this_log as log
 from policy import this_policy as policy
 
 IS_HOST = r'^(\*\.|)([\_a-z0-9]([-a-z-0-9]{0,61}[a-z0-9]){0,1}\.)+[a-z0-9]([-a-z0-9]{0,61}[a-z0-9]){0,1}[.]?$'
@@ -179,7 +178,8 @@ def web_valid_new_account(user):
 
     tld = reply
     res = resolv.Resolver()
-    if (tld_dns := res.resolv(tld, "px", flags=0)) is None:
+    flags = 0 if policy.get("dns_supports_authoritative") else resolv.DNS_FLAGS["RD"]
+    if (tld_dns := res.resolv(tld, "px", flags=flags)) is None:
         return False, "TLD Failed to resolve"
 
     if tld_dns.get("Status", 3) != 0:
@@ -197,7 +197,7 @@ def web_valid_new_account(user):
 
 # for testing
 if __name__ == "__main__":
-    print(is_valid_account(sys.argv[1]))
+    print(web_valid_new_account(sys.argv[1]))
 
     # print(sys.argv[1],is_valid_email(sys.argv[1]))
     # print("\n".join(reserved_account_names))
