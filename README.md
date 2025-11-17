@@ -100,3 +100,32 @@ The common header & footer are `start.inc` & `end.inc` respectively.
 The registration process is run completely using a rest/api. Currently it is not documented, but you can see all the calls in [python/run_webui.py](python/run_webui.py).
 
 The registration UI provided in this container is simply a single page javascript webapp that calls this rest/api.
+
+
+## Your Hosting Domain
+
+To provide this mail service, you will need a domain to host the web and email services from. This can be either an ICANN or Handhsake domain.
+Hosting from an ICANN domain has the advantage of making TLS Certificates a lot easier and means the users can use 
+their default email address to send email from their account to ICANN destinations. ICANN destinations will mostly
+not accept email from a Handshake domain name.
+
+Although the system supports using a different domain for the web hosting and email serivce, it is not necessary and
+will probably cause user confusion, so I would recommend you host the web & email at the same domain name.
+
+To get the service to work, you will need specific DNS records in the hosting domain. Here is the hosting domain for `shakethemail.net`.
+
+		shakethemail.net.	3600	IN	SOA	ns1.namekshake.net. hostmaster.shakethemail.com. 1762268612 10800 3600 604800 3600
+		shakethemail.net.	3600	IN	NS	ns1.nameshake.net.
+		shakethemail.net.	3600	IN	NS	ns2.nameshake.net.
+		shakethemail.net.	3600	IN	NS	ns3.nameshake.net.
+		shakethemail.net.	1800	IN	TXT	"v=spf1 ip4:78.129.239.26 -all"
+		shakethemail.net.	600	IN	A	78.129.239.26
+		*.shakethemail.net.	600	IN	A	78.129.239.26
+
+The wildcard record is necessary to direct the user's mail to the service, i.e. to make any MX Code resolve to the serivce's IP Address.
+
+The other `A` record is to direct the web traffic to the same server.
+
+The SPF record is required by some recipients (e.g. GMail) and just says "all email from this domain will only originate from the ipv4 address `78.129.239.26`".
+
+The `SOA` & `NS` records will be different for your domain.
