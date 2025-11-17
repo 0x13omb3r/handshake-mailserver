@@ -1,11 +1,13 @@
 #! /bin/sh
 
-id=$(docker image ls | awk '{ if($1=="handshake-mailserver") print $3 }')
-ver="$(date +%Y-%m-%d)"
-if test "$1"; then ver="$1"; fi
+for me in $(cat list)
+do
+	id=$(docker image ls | awk '{ if($1=="'"${me}"'") print $3 }')
+	ver="$(cat build.txt)"
 
-docker tag ${id} jamesstevens/handshake-mailserver
-docker push jamesstevens/handshake-mailserver
+	docker tag ${id} jamesstevens/${me}
+	docker push jamesstevens/${me}
 
-docker tag ${id} jamesstevens/handshake-mailserver:${ver}
-docker push jamesstevens/handshake-mailserver:${ver}
+	docker tag ${id} jamesstevens/${me}:${ver}
+	docker push jamesstevens/${me}:${ver}
+done

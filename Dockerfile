@@ -70,5 +70,5 @@ COPY python /usr/local/python
 RUN rm -rf /usr/local/python/.style.yapf /usr/local/python/pyproject.toml /usr/local/python/.ruff_cache
 RUN python3 -m compileall /usr/local/python
 
-RUN /usr/local/setup/make_build
+COPY build.txt /usr/local/etc/build.txt
 CMD [ "/usr/local/bin/run_init" ]

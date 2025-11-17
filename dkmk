@@ -13,5 +13,7 @@ if ! cmp default_config.new default_config.tgz
 	fi
 rm -fv default_config.new
 
+date +%Y%m%d.%H%M > build.txt
+
 docker pull alpine:3.22
 docker image build $* -t handshake-mailserver .
