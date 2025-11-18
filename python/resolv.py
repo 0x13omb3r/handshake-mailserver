@@ -178,7 +178,11 @@ class Resolver:
 
                 self.reply, (addr, _) = self.sock.recvfrom(DNS_MAX_RESP)
                 if self.match_id():
-                    self.decoded_resp = dns.message.from_wire(self.reply)
+                    try:
+                        self.decoded_resp = dns.message.from_wire(self.reply)
+                    except dns.exception.FormError as e:
+                        log.debug(f"DNS read error: {e}")
+                        return None
 
                     if (self.decoded_resp.flags
                             & DNS_FLAGS["TC"]) > 0 or self.force_tcp:
@@ -268,6 +272,7 @@ class Resolver:
 
 def main():
     """ main """
+    log.init("Resolver test run", with_debug=True, to_syslog=False)
     parser = argparse.ArgumentParser(
         description='This is a wrapper to test the resolver code')
     parser.add_argument("-s", "--servers", help="Resolvers to query")
