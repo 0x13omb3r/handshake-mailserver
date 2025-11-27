@@ -315,13 +315,12 @@ function doRegister()
 
 	let f = document.formRegister;
 
-	let fqdn = toASCII(f.user.value);
 	if (f.password.value != f.confirm.value) return regErr("Passwords do not match",f.password);
 	if (!valid_email.test(f.email.value)) return regErr("Invalid email address",f.email);
-	if (valid_account(fqdn)) return regErr("Invalid domain name",f.user);
+	if (valid_account(toASCII(f.user.value))) return regErr("Invalid domain name",f.user);
 
 	let data = {
-		"user":fqdn,
+		"user": f.user.value,
 		"email":f.email.value,
 		"password":f.password.value,
 		"confirm":f.confirm.value
@@ -354,10 +353,7 @@ function doLogin()
 	}
 
 	let f = document.formLogin;
-	let fqdn = toASCII(f.user.value)
-	if (!valid_account(fqdn)) return regErr("Invalid login name",f.user);
-
-	let data = { "user":fqdn, "password":f.password.value };
+	if (!valid_account(toASCII(f.user.value))) return regErr("Invalid login name",f.user);
 
 	callApi("users/login",(ret,reply) => {
 		if (!ret) {
@@ -369,7 +365,7 @@ function doLogin()
 		user_landing(reply);
 		f.user.value = "";
 		f.password.value = "";
-		}, { json: data });
+		}, { json: { "user": f.user.value, "password":f.password.value } });
 
 	return false;
 }
