@@ -1,8 +1,6 @@
-# this was create by grok, so check against the actual code until I get time to check it all
-
 openapi: 3.0.3
 info:
-  title: EPP Registrar WebUI API
+  title: Handshake Webmail Registration API
   description: REST/API for the user's site web/UI (WebMail Registration)
   version: 1.0.0
   contact:
@@ -10,8 +8,8 @@ info:
     email: me@lord.webmail
 
 servers:
-  - url: http://localhost:5000
-    description: Default Flask server
+  - url: http://shakethemail.net/
+    description: Shake The Mail - Free Handshake Webmail Service
 
 components:
   securitySchemes:
@@ -27,9 +25,48 @@ components:
       properties:
         error:
           type: string
-          example: "Not logged in or login timed-out"
+          description: Reason for an error is being returned
+          example: "reason, e.g. 'Not logged in or login timed-out'"
       required:
         - error
+
+    UsersResponse:
+      type: object
+      properties:
+        user:
+          type: string
+          description: The login domain of the account
+          format: domain_name
+          example: "example.localhost"
+        mx:
+          type: string
+          description: Account MX Code
+          example: "ibz2wrrzjluqruxleurnpcn3dcy4doh2ey6jo7oajq7t4wid"
+        email:
+          type: string
+          format: email
+          description: Password recovery email address
+          example: "aaa@bbb.com"
+        created_dt:
+          type: string
+          format: date_time_utc
+          description: date and time in UTC the account was created
+          example: "2025-11-27 13:53:38"
+        amended_dt:
+          type: string
+          format: date_time_utc
+          description: date and time in UTC the account was last changed
+          example: "2025-11-27 13:53:38"
+        last_login_dt:
+          type: string
+          format: date_time_utc
+          description: date and time in UTC the account was last logged in
+          example: "2025-11-27 13:53:38"
+        identities:
+          type: list
+          format: email
+          description: List of email address identities the account has set up in webmail
+          example: [ 'aaa@example.localhost', 'bbb@example.localhost' ]
 
     SuccessResponse:
       type: object
@@ -46,7 +83,7 @@ components:
       properties:
         name:
           type: string
-          format: Domain name
+          format: domain_name
         password:
           type: string
           format: password
@@ -60,7 +97,7 @@ components:
       properties:
         name:
           type: string
-          format: Domain name
+          format: domain_name
         email:
           type: string
           format: email
@@ -73,7 +110,7 @@ components:
       properties:
         name:
           type: string
-          format: Domain name
+          format: domain_name
         email:
           type: string
           format: email
@@ -116,13 +153,15 @@ paths:
     get:
       summary: Get current logged-in user details
       operationId: getUserDetails
+      security:
+        - SessionCookie: []
       responses:
         '200':
           description: User data (sensitive fields removed)
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/UsersResponse'
         '299':
           description: Error (not logged in, etc.)
           content:
@@ -182,6 +221,11 @@ paths:
       requestBody:
         required: true
         content:
+          headers:
+            X-Session-Code:
+              schema:
+                type: string
+              description: Session token from login or registration
           application/json:
             schema:
               type: object
@@ -193,9 +237,18 @@ paths:
                 - email
       responses:
         '200':
+          description: Email address changed
+          content:
+            application/json:
+              schema:
+                type: object
           $ref: '#/components/responses/OK'
         '299':
-          $ref: '#/components/responses/AuthError'
+          description: Email address failed to change, reason in error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /wmapi/users/password:
     post:
@@ -258,6 +311,12 @@ paths:
       summary: Log out current user
       operationId: logout
       responses:
+        '299':
+          description: Logout failed, reason given in error property
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '200':
           description: Logged out successfully
           content:
@@ -287,8 +346,10 @@ paths:
                   format: password
       responses:
         '200':
+          description: Account has been successfully closed. All account data and mail folders have been deleted
           $ref: '#/components/responses/OK'
         '299':
+          description: Account failed to close, reason returned
           $ref: '#/components/responses/AuthError'
 
   /wmapi/password/request:
@@ -337,18 +398,3 @@ paths:
           $ref: '#/components/responses/OK'
         '299':
           $ref: '#/components/responses/AuthError'
-
-components:
-  responses:
-    OK:
-      description: Simple OK response
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SuccessResponse'
-    AuthError:
-      description: Authentication or authorization error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
