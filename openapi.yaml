@@ -41,12 +41,12 @@ components:
     LoginRequest:
       type: object
       required:
-        - email
+        - name
         - password
       properties:
-        email:
+        name:
           type: string
-          format: email
+          format: Domain name
         password:
           type: string
           format: password
@@ -73,6 +73,7 @@ components:
       properties:
         name:
           type: string
+          format: Domain name
         email:
           type: string
           format: email
