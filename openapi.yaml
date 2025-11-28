@@ -60,6 +60,7 @@ components:
       properties:
         name:
           type: string
+          format: Domain name
         email:
           type: string
           format: email
