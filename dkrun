@@ -6,7 +6,8 @@ docker run \
 	-m 1g \
 	--env DEBUG_MODE=Y \
 	--env SYSLOG_STDOUT=Y \
-	--dns 192.168.8.110 \
+	--dns 192.168.3.22 \
+	--dns 192.168.3.32 \
 	-v /opt/data/handshake-mailserver:/opt/data \
 	-v /opt/github/handshake-mailserver/htdocs:/usr/local/htdocs \
 	-v /opt/github/handshake-mailserver/python:/usr/local/python \
