@@ -317,7 +317,7 @@ function doRegister()
 
 	if (f.password.value != f.confirm.value) return regErr("Passwords do not match",f.password);
 	if (!valid_email.test(f.email.value)) return regErr("Invalid email address",f.email);
-	if (valid_account(toASCII(f.user.value))) return regErr("Invalid domain name",f.user);
+	if (!valid_account(toASCII(f.user.value))) return regErr("Invalid domain name",f.user);
 
 	let data = {
 		"user": f.user.value,
