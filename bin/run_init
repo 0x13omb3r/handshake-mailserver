@@ -6,14 +6,16 @@ echo "=================== [$(date)] INITALIZING ==================="
 
 cp -a ${SRC}/uid/* /run/${file}
 
-if ! test -d ${BASE}/service -a ${BASE}/postfix -a ${BASE}/pems
+if ! test -d ${BASE}/service -a -d ${BASE}/postfix -a -d ${BASE}/pems
 	then
 		cd ${BASE}
 		tar xf /usr/local/etc/default_config.tgz
 		cd /
 	fi
+chown service: ${BASE}/service
+chown -R service: ${BASE}/service/config
 
-/usr/local/python/doms_runner.py -O remake_unix_files
+su service -s /bin/sh -c "exec /usr/local/python/doms_runner.py -O remake_unix_files"
 /usr/local/python/root_runner.py -O install_system_files
 
 mkdir -p /run/exec/root /run/exec/doms
@@ -22,7 +24,8 @@ chgrp service /run/exec/doms /run/exec/root
 
 ${PYBASE}/merge_templates.py
 . /run/templates/__include__
-/usr/local/python/doms_runner.py -O remake_mail_files
+
+su service -s /bin/sh -c "exec /usr/local/python/doms_runner.py -O remake_mail_files"
 /usr/local/python/root_runner.py -O install_system_files
 
 mkdir -p /run/pems

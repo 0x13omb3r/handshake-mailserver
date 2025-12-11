@@ -54,6 +54,10 @@ def load(user, with_events=True):
         js = json.load(fd)
 
     js["user"] = user
+    js["utf8"] = {user: misc.puny_to_utf8(user)}
+    for dom in js.get("domains", {}):
+        js["utf8"][dom] = misc.puny_to_utf8(dom)
+
     if not with_events and "events" in js:
         del js["events"]
     return True, js

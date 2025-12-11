@@ -103,10 +103,11 @@ def make_session_code(user):
 
 
 if __name__ == "__main__":
-    x = make_session_code("james")
-    print(x)
-    print(make_hash(x + ":" + "1234"))
-    print(make_hash(x + ":" + "1234"))
+    print(puny_to_utf8("james"))
+    print(puny_to_utf8("xn--mp8h"))
+    print(puny_to_utf8("xn--v86cr064b"))
+    print(utf8_to_puny("👁️"))
+    print(utf8_to_puny("👁"))
 
 
 def not_this_time():

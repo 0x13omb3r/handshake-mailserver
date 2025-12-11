@@ -72,13 +72,17 @@ def has_idn(name):
 
 
 def is_valid_account(name):
-    return is_valid_fqdn(name) or is_valid_tld(name)
+    return (is_valid_fqdn(name)
+            or is_valid_tld(name)) and misc.utf8_to_puny(name) is not None
 
 
 def is_valid_tld(name):
     if name is None or not isinstance(name, str):
         return False
     if len(name) > 63 or len(name) <= 0:
+        return False
+
+    if misc.utf8_to_puny(name) is None:
         return False
 
     return re.match(IS_TLD, name, re.IGNORECASE) is not None
@@ -92,7 +96,7 @@ def is_valid_fqdn(name):
     if re.match(IS_FQDN, name, re.IGNORECASE) is None:
         return False
     if not has_idn(name):
-        return True
+        return misc.utf8_to_puny(name) is not None
     return misc.puny_to_utf8(name)
 
 
@@ -101,11 +105,13 @@ def is_valid_host(name):
         return False
     if len(name) > 255 or len(name) <= 0:
         return False
-    return re.match(IS_HOST, name, re.IGNORECASE) is not None
+    pname = misc.utf8_to_puny(name)
+    return pname is not None and re.match(IS_HOST, pname,
+                                          re.IGNORECASE) is not None
 
 
 def normalise_user(sent_data):
-    sent_data["user"] = sent_data["user"].strip(".").lower()
+    sent_data["user"] = misc.utf8_to_puny(sent_data["user"]).strip(".").lower()
 
 
 NORMALISE_DATA = {"user": normalise_user}
@@ -178,7 +184,8 @@ def web_valid_new_account(user):
 
     tld = reply
     res = resolv.Resolver()
-    flags = 0 if policy.get("dns_supports_authoritative") else resolv.DNS_FLAGS["RD"]
+    flags = 0 if policy.get(
+        "dns_supports_authoritative") else resolv.DNS_FLAGS["RD"]
     if (tld_dns := res.resolv(tld, "px", flags=flags)) is None:
         return False, "TLD Failed to resolve"
 

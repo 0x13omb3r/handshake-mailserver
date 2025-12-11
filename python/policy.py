@@ -79,4 +79,7 @@ class Policy:
 this_policy = Policy()
 
 if __name__ == "__main__":
-    print(this_policy.get(sys.argv[1]))
+    if len(sys.argv) > 1:
+        print(this_policy.get(sys.argv[1]))
+    else:
+        print(json.dumps(DEFAULT_POLICY_VALUES,indent=2))

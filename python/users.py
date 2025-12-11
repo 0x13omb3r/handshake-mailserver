@@ -50,15 +50,16 @@ def login(sent_data, user_agent):
                                                             None) is None:
         return False, "Insufficient data"
 
-    ok, user_data = uconfig.load(sent_data["user"])
+    user = misc.utf8_to_puny(sent_data.get("user", None))
+    ok, user_data = uconfig.load(user)
     if not ok or user_data is None or "password" not in user_data:
-        return False, f"User '{sent_data['user']}' not found or missing password"
+        return False, f"User '{user}' not found or missing password"
 
     if not compare_passwords(sent_data["password"], user_data["password"]):
         return False, "Password does no match"
 
-    uconfig.update(sent_data["user"], {"last_login_dt": misc.now()})
-    return create_session_file(sent_data["user"], user_data, user_agent)
+    uconfig.update(user, {"last_login_dt": misc.now()})
+    return create_session_file(user, user_data, user_agent)
 
 
 def check_session(session_code, user_agent):
@@ -135,14 +136,15 @@ def request_password_reset(user, sent_data):
     if not ok:
         return False, reply
 
-    if validation.user_already_has_reset(sent_data.get("user", None)):
+    user = misc.utf8_to_puny(sent_data.get("user", None))
+    if validation.user_already_has_reset(user):
         return False, "Password reset request already exists"
 
     executor.create_command(
         "webui_password_request", "doms", {
             "verb": "request_password_reset",
             "data": {
-                "user": sent_data["user"],
+                "user": user,
                 "pin": sent_data["pin"]
             }
         })
@@ -181,7 +183,7 @@ def register(sent_data, user_agent):
     if sent_data["password"] != sent_data["confirm"]:
         return False, "Passwords do not match"
 
-    user = sent_data["user"]
+    user = misc.utf8_to_puny(sent_data.get("user", None))
     now = misc.now()
     user_data = {
         "mx":
